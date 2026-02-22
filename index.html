@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>うちのスコア｜夫婦の貢献度、数字で見てみよう</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f6f3;
+  --white: #ffffff;
+  --h: #e85d4a;
+  --h-light: #fdf0ee;
+  --h-mid: #f5c4be;
+  --w: #2a7d7b;
+  --w-light: #ebf5f5;
+  --w-mid: #a8d5d4;
+  --border: #e5e2db;
+  --text: #1a1a1a;
+  --muted: #888880;
+  --accent: #1a1a1a;
+  --green: #2d7a4a;
+  --green-light: #ebf5ef;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+.app { max-width: 680px; margin: 0 auto; padding: 0 16px 80px; }
+
+/* ── HEADER ── */
+header {
+  padding: 32px 0 24px;
+  border-bottom: 2px solid var(--text);
+  margin-bottom: 28px;
+}
+.logo {
+  font-size: clamp(28px, 8vw, 44px);
+  font-weight: 900;
+  letter-spacing: -1px;
+  line-height: 1;
+  color: var(--text);
+}
+.logo span { color: var(--h); }
+.tagline {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+  letter-spacing: 0.5px;
+}
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 24px;
+  border-bottom: 2px solid var(--text);
+}
+.tab {
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all .15s;
+  letter-spacing: 0.3px;
+}
+.tab.active {
+  color: var(--text);
+  border-bottom-color: var(--text);
+}
+.tab:hover:not(.active) { color: var(--text); }
+
+/* ── SECTIONS ── */
+.section { display: none; }
+.section.active { display: block; animation: fadeIn .2s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+
+/* ── CARD ── */
+.card {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.card-header {
+  padding: 14px 18px;
+  border-bottom: 1.5px solid var(--border);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-body { padding: 18px; }
+
+/* ── PLAYER GRID ── */
+.player-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.player-card {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.player-header {
+  padding: 12px 16px 10px;
+  border-bottom: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.player-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.player-card.h .player-dot { background: var(--h); }
+.player-card.w .player-dot { background: var(--w); }
+.player-label { font-size: 13px; font-weight: 900; }
+.player-card.h .player-label { color: var(--h); }
+.player-card.w .player-label { color: var(--w); }
+.player-body { padding: 14px; }
+
+/* ── FIELD ── */
+.field { margin-bottom: 12px; }
+.field:last-child { margin-bottom: 0; }
+.field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+.field input, .field select {
+  width: 100%;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  transition: border-color .15s;
+  -webkit-appearance: none;
+}
+.field input:focus, .field select:focus {
+  border-color: var(--text);
+  background: var(--white);
+}
+
+/* ── MODE TOGGLE ── */
+.mode-toggle {
+  display: flex;
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 3px;
+}
+.mode-btn {
+  flex: 1;
+  padding: 7px 12px;
+  border-radius: 6px;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+  color: var(--muted);
+  background: transparent;
+}
+.mode-btn.active {
+  background: var(--white);
+  color: var(--text);
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+}
+
+/* ── SLIDER ── */
+.slider-row { margin-bottom: 16px; }
+.slider-row:last-child { margin-bottom: 0; }
+.slider-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.slider-name { font-size: 13px; font-weight: 500; }
+.slider-pcts { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; }
+.pct-h { color: var(--h); }
+.pct-w { color: var(--w); }
+.pct-sep { color: var(--border); }
+.dual-slider { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+input[type=range] {
+  width: 100%;
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  outline: none;
+  cursor: pointer;
+}
+.h-range input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--h);
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+.w-range input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--w);
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+
+/* ── DETAIL INPUT ── */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 80px 80px;
+  gap: 8px;
+  align-items: center;
+}
+.detail-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.detail-input-h, .detail-input-w {
+  width: 100%;
+  padding: 8px 6px;
+  border-radius: 8px;
+  border: 1.5px solid;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  font-family: inherit;
+  outline: none;
+  background: var(--bg);
+  transition: border-color .15s;
+}
+.detail-input-h { border-color: var(--h-mid); color: var(--h); }
+.detail-input-h:focus { border-color: var(--h); background: var(--h-light); }
+.detail-input-w { border-color: var(--w-mid); color: var(--w); }
+.detail-input-w:focus { border-color: var(--w); background: var(--w-light); }
+.detail-row-label { font-size: 13px; }
+.detail-unit { font-size: 10px; color: var(--muted); margin-top: 1px; }
+.detail-sep { height: 1px; background: var(--border); margin: 12px 0; grid-column: 1/-1; }
+
+/* PREVIEW BAR */
+.preview-bar-row { margin-bottom: 10px; }
+.preview-bar-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.preview-bar-track {
+  height: 6px;
+  background: var(--bg);
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+}
+.preview-bar-h { background: var(--h); opacity: .8; }
+.preview-bar-w { background: var(--w); opacity: .8; }
+
+/* ── CHILDREN ── */
+.children-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.child-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 10px 4px 8px;
+  font-size: 12px;
+}
+.child-tag select {
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+}
+.child-btns { display: flex; gap: 8px; }
+.child-add, .child-rm {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+}
+.child-add { border: 1.5px solid var(--text); background: var(--text); color: white; }
+.child-add:hover { opacity: .8; }
+.child-rm { border: 1.5px solid var(--border); background: transparent; color: var(--muted); }
+.child-rm:hover { border-color: var(--h); color: var(--h); }
+.child-load-label {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+/* ── START BUTTON ── */
+.start-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--text);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 900;
+  font-family: inherit;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: opacity .15s, transform .1s;
+  margin-bottom: 24px;
+}
+.start-btn:hover { opacity: .85; }
+.start-btn:active { transform: scale(.99); }
+
+/* ── RESULTS ── */
+#results { animation: fadeIn .3s ease; }
+
+/* VERDICT BANNER */
+.verdict-banner {
+  background: var(--text);
+  color: white;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.verdict-label { font-size: 11px; font-weight: 700; opacity: .6; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+.verdict-text { font-size: clamp(16px, 4vw, 22px); font-weight: 900; line-height: 1.3; }
+.verdict-scores { text-align: right; flex-shrink: 0; }
+.verdict-score-row { display: flex; align-items: baseline; gap: 6px; justify-content: flex-end; }
+.verdict-score-num { font-size: 28px; font-weight: 900; line-height: 1; }
+.verdict-score-name { font-size: 11px; opacity: .7; }
+
+/* SCORE BARS */
+.score-bars { margin-bottom: 16px; }
+.score-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.score-bar-label { font-size: 13px; font-weight: 700; width: 28px; flex-shrink: 0; }
+.score-bar-track {
+  flex: 1;
+  height: 32px;
+  background: var(--bg);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+.score-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  padding-left: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  transition: width 1s cubic-bezier(.4,0,.2,1);
+  min-width: 40px;
+}
+.score-bar-num { font-size: 13px; font-weight: 900; width: 36px; text-align: right; flex-shrink: 0; }
+
+/* 50:50 LINE */
+.fifty-line {
+  position: relative;
+  text-align: center;
+  margin: 4px 0 14px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.fifty-line::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  height: 1px;
+  background: var(--border);
+}
+.fifty-line span {
+  position: relative;
+  background: var(--bg);
+  padding: 0 8px;
+}
+
+/* BREAKDOWN TABLE */
+.breakdown { margin-bottom: 16px; }
+.breakdown-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 36px 36px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.breakdown-row:last-child { border-bottom: none; }
+.breakdown-name { color: var(--muted); }
+.breakdown-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; display: flex; }
+.breakdown-bar-h { background: var(--h); opacity: .8; }
+.breakdown-bar-w { background: var(--w); opacity: .8; }
+.breakdown-pct-h { font-weight: 700; color: var(--h); text-align: right; }
+.breakdown-pct-w { font-weight: 700; color: var(--w); text-align: right; }
+
+/* SHARE CARD */
+.share-card {
+  background: var(--text);
+  color: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.share-card-title { font-size: 11px; opacity: .5; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+.share-scores-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 12px;
+}
+.share-fighter { text-align: center; }
+.share-fighter-num { font-size: 52px; font-weight: 900; line-height: 1; }
+.share-fighter.h .share-fighter-num { color: #ff9087; }
+.share-fighter.w .share-fighter-num { color: #7ee8e6; }
+.share-fighter-lbl { font-size: 11px; opacity: .6; margin-top: 2px; }
+.share-vs { font-size: 16px; font-weight: 900; opacity: .4; }
+.share-verdict { font-size: 16px; font-weight: 900; margin-bottom: 8px; }
+.share-tag { font-size: 11px; opacity: .4; }
+.share-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+.share-btn {
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  border: 1.5px solid;
+  transition: all .15s;
+}
+.share-btn.x { border-color: rgba(255,255,255,.2); color: white; background: rgba(255,255,255,.08); }
+.share-btn.x:hover { background: rgba(255,255,255,.15); }
+.share-btn.line { border-color: #06c755; color: #06c755; background: transparent; }
+.share-btn.line:hover { background: rgba(6,199,85,.1); }
+.share-btn.threads { border-color: rgba(255,255,255,.2); color: white; background: rgba(255,255,255,.08); }
+.share-btn.threads:hover { background: rgba(255,255,255,.15); }
+.share-btn.copy { border-color: rgba(255,255,255,.2); color: white; background: rgba(255,255,255,.08); }
+.share-btn.copy:hover { background: rgba(255,255,255,.15); }
+
+/* ── CALIBRATION ── */
+.cal-intro {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 18px;
+  margin-bottom: 16px;
+}
+.cal-intro-title { font-size: 16px; font-weight: 900; margin-bottom: 6px; }
+.cal-intro-desc { font-size: 13px; color: var(--muted); line-height: 1.7; }
+.cal-progress-wrap { margin-top: 14px; }
+.cal-progress-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between; }
+.cal-progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.cal-progress-fill { height: 100%; background: var(--text); border-radius: 2px; transition: width .5s ease; }
+
+.cal-case {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.cal-case-header {
+  padding: 12px 18px;
+  border-bottom: 1.5px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.cal-case-tag { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+.cal-case-meta { display: flex; align-items: center; gap: 8px; }
+.hot-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  background: #fff3f2;
+  border: 1px solid var(--h);
+  color: var(--h);
+  border-radius: 20px;
+  font-weight: 700;
+}
+.cal-votes-count { font-size: 11px; color: var(--muted); }
+.cal-case-body { padding: 18px; }
+.cal-case-title { font-size: 15px; font-weight: 700; line-height: 1.6; margin-bottom: 16px; }
+
+/* cal scores */
+.cal-scores {
+  display: grid;
+  grid-template-columns: 1fr 32px 1fr;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.cal-score-box { text-align: center; padding: 12px; border-radius: 8px; }
+.cal-score-box.h { background: var(--h-light); }
+.cal-score-box.w { background: var(--w-light); }
+.cal-score-who { font-size: 11px; font-weight: 700; margin-bottom: 4px; }
+.cal-score-box.h .cal-score-who { color: var(--h); }
+.cal-score-box.w .cal-score-who { color: var(--w); }
+.cal-score-num { font-size: 36px; font-weight: 900; line-height: 1; }
+.cal-score-box.h .cal-score-num { color: var(--h); }
+.cal-score-box.w .cal-score-num { color: var(--w); }
+.cal-score-pt { font-size: 11px; color: var(--muted); }
+.cal-vs { font-size: 13px; font-weight: 900; color: var(--muted); text-align: center; }
+.cal-verdict { text-align: center; font-size: 14px; font-weight: 900; margin-bottom: 16px; color: var(--text); }
+
+/* detail toggle */
+.cal-detail-btn {
+  width: 100%;
+  padding: 8px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: inherit;
+  margin-bottom: 14px;
+  transition: all .15s;
+}
+.cal-detail-btn:hover { border-color: var(--text); color: var(--text); }
+.cal-detail-panel { display: none; margin-bottom: 14px; }
+.cal-data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.cal-data-box {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+.cal-data-who { font-weight: 700; margin-bottom: 6px; font-size: 11px; }
+.cal-data-box.h .cal-data-who { color: var(--h); }
+.cal-data-box.w .cal-data-who { color: var(--w); }
+.cal-data-item { color: var(--muted); margin-bottom: 3px; }
+.cal-data-item b { color: var(--text); font-weight: 700; }
+.cal-kids-row {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  margin-bottom: 8px;
+  color: var(--muted);
+}
+.cal-kids-row b { color: var(--text); }
+.cal-house-bars { background: var(--bg); border-radius: 8px; padding: 12px; }
+.cal-house-label { font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 10px; letter-spacing: 0.5px; }
+.cal-hbar-row { margin-bottom: 8px; }
+.cal-hbar-meta { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; }
+.cal-hbar-name { color: var(--muted); }
+.cal-hbar-pcts span:first-child { color: var(--h); font-weight: 700; }
+.cal-hbar-pcts span:last-child { color: var(--w); font-weight: 700; }
+.cal-hbar-track { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; display: flex; }
+.cal-hbar-h { background: var(--h); opacity: .8; }
+.cal-hbar-w { background: var(--w); opacity: .8; }
+
+/* vote area */
+.cal-vote-q { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+.cal-vote-opts { display: flex; flex-direction: column; gap: 6px; }
+.cal-vote-btn {
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cal-vote-btn::before { content: '→'; color: var(--muted); font-size: 12px; flex-shrink: 0; }
+.cal-vote-btn:hover { border-color: var(--text); background: var(--white); }
+
+/* vote result */
+.cal-result-row { margin-bottom: 10px; }
+.cal-result-meta { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+.cal-result-lbl { color: var(--muted); }
+.cal-result-lbl.chosen { color: var(--text); font-weight: 700; }
+.cal-result-pct { font-weight: 700; }
+.cal-result-track { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.cal-result-fill { height: 100%; border-radius: 4px; transition: width .8s ease; }
+.cal-result-total { font-size: 11px; color: var(--muted); text-align: right; margin-top: 6px; }
+
+/* more btn */
+.cal-more-btn {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: inherit;
+  margin-bottom: 12px;
+  transition: all .15s;
+}
+.cal-more-btn:hover { border-color: var(--text); color: var(--text); }
+
+/* ── UTIL ── */
+.hidden { display: none !important; }
+@media (max-width: 480px) {
+  .player-grid { grid-template-columns: 1fr; }
+  .breakdown-row { grid-template-columns: 100px 1fr 32px 32px; }
+  .share-btns { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="logo">うちの<span>スコア</span></div>
+    <div class="tagline">夫婦の貢献度を数字で見てみよう。中立に、正直に。</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('input',this)">診断する</button>
+    <button class="tab" onclick="switchTab('survey',this)">みんなの中立</button>
+  </div>
+
+  <!-- ===== 診断 ===== -->
+  <div class="section active" id="tab-input">
+
+    <div class="player-grid">
+      <div class="player-card h">
+        <div class="player-header">
+          <div class="player-dot"></div>
+          <div class="player-label">夫</div>
+        </div>
+        <div class="player-body">
+          <div class="field"><label>年収（万円）</label><input type="number" id="h-income" value="600" min="0"></div>
+          <div class="field"><label>週の労働時間（h）</label><input type="number" id="h-work" value="50" min="0" max="100"></div>
+          <div class="field"><label>平均睡眠（h/日）</label><input type="number" id="h-sleep" value="7" min="0" max="12" step="0.5"></div>
+          <div class="field"><label>勤務形態</label>
+            <select id="h-worktype">
+              <option value="office">出社</option>
+              <option value="remote">リモート</option>
+              <option value="flex">フレックス</option>
+              <option value="part">パート</option>
+              <option value="none">専業・無職</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="player-card w">
+        <div class="player-header">
+          <div class="player-dot"></div>
+          <div class="player-label">妻</div>
+        </div>
+        <div class="player-body">
+          <div class="field"><label>年収（万円）</label><input type="number" id="w-income" value="200" min="0"></div>
+          <div class="field"><label>週の労働時間（h）</label><input type="number" id="w-work" value="30" min="0" max="100"></div>
+          <div class="field"><label>平均睡眠（h/日）</label><input type="number" id="w-sleep" value="6" min="0" max="12" step="0.5"></div>
+          <div class="field"><label>勤務形態</label>
+            <select id="w-worktype">
+              <option value="office">出社</option>
+              <option value="remote">リモート</option>
+              <option value="flex">フレックス</option>
+              <option value="part" selected>パート</option>
+              <option value="none">専業・無職</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- こども -->
+    <div class="card">
+      <div class="card-header">こどもの情報</div>
+      <div class="card-body">
+        <div class="children-tags" id="children-list"></div>
+        <div class="child-btns">
+          <button class="child-add" onclick="addChild()">＋ 追加</button>
+          <button class="child-rm" onclick="removeChild()">－ 削除</button>
+        </div>
+        <div class="child-load-label" id="child-burden-info"></div>
+      </div>
+    </div>
+
+    <!-- 家事分担 -->
+    <div class="card">
+      <div class="card-header">
+        <span>家事・育児の分担</span>
+        <div class="mode-toggle">
+          <button class="mode-btn active" id="mode-simple" onclick="setHouseMode('simple')">かんたん</button>
+          <button class="mode-btn" id="mode-detail" onclick="setHouseMode('detail')">くわしく</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="house-simple">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">夫・妻それぞれの担当割合をスライダーで設定</div>
+          ${['cooking','cleaning','shopping','childcare','mental'].map((cat, i) => {
+            const info = [
+              {name:'料理', icon:'🍳', hd:30, wd:70},
+              {name:'掃除・洗濯', icon:'🧹', hd:20, wd:80},
+              {name:'買い物', icon:'🛒', hd:40, wd:60},
+              {name:'育児', icon:'👶', hd:25, wd:75},
+              {name:'名もなき家事', icon:'🧠', hd:20, wd:80},
+            ][i];
+            return `
+            <div class="slider-row">
+              <div class="slider-meta">
+                <span class="slider-name">${info.icon} ${info.name}</span>
+                <div class="slider-pcts">
+                  <span class="pct-h" id="${cat}-h-v">${info.hd}%</span>
+                  <span class="pct-sep">/</span>
+                  <span class="pct-w" id="${cat}-w-v">${info.wd}%</span>
+                </div>
+              </div>
+              <div class="dual-slider">
+                <div class="h-range"><input type="range" id="${cat}-h" min="0" max="100" value="${info.hd}" oninput="syncSlider('${cat}',this.value,'h')"></div>
+                <div class="w-range"><input type="range" id="${cat}-w" min="0" max="100" value="${info.wd}" oninput="syncSlider('${cat}',this.value,'w')"></div>
+              </div>
+            </div>`;
+          }).join('')}
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">🧠 名もなき家事：書類管理・通院予約・行事把握・家電手配など</div>
+        </div>
+
+        <div id="house-detail" style="display:none;">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">週あたりの回数・時間を入力。自動で割合に変換します。</div>
+          <div class="detail-grid" style="margin-bottom:10px;">
+            <span class="detail-header">カテゴリ</span>
+            <span class="detail-header" style="text-align:center;color:var(--h);">夫</span>
+            <span class="detail-header" style="text-align:center;color:var(--w);">妻</span>
+          </div>
+          ${[
+            {cat:'cooking',  icon:'🍳', name:'料理',      unit:'回/週'},
+            {cat:'cleaning', icon:'🧹', name:'掃除・洗濯', unit:'回/週'},
+            {cat:'shopping', icon:'🛒', name:'買い物',     unit:'回/週'},
+            {cat:'childcare',icon:'👶', name:'育児',       unit:'h/日'},
+            {cat:'mental',   icon:'🧠', name:'名もなき家事',unit:'件/週'},
+          ].map(r => `
+            <div class="detail-grid" style="margin-bottom:10px;">
+              <div>
+                <div class="detail-row-label">${r.icon} ${r.name}</div>
+                <div class="detail-unit">${r.unit}</div>
+              </div>
+              <input class="detail-input-h" type="number" id="d-${r.cat}-h" min="0" max="99" step="0.5" placeholder="0" oninput="syncDetailToSlider()">
+              <input class="detail-input-w" type="number" id="d-${r.cat}-w" min="0" max="99" step="0.5" placeholder="0" oninput="syncDetailToSlider()">
+            </div>
+          `).join('')}
+          <div id="detail-preview" style="display:none;margin-top:14px;padding:12px;background:var(--bg);border-radius:8px;">
+            <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:10px;">変換後の割合</div>
+            <div id="detail-preview-bars"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="start-btn" onclick="calculate()">スコアを計算する</button>
+
+    <!-- RESULTS -->
+    <div id="results" class="hidden">
+
+      <!-- verdict -->
+      <div class="verdict-banner" id="verdict-banner">
+        <div>
+          <div class="verdict-label">診断結果</div>
+          <div class="verdict-text" id="verdict-text"></div>
+          <div style="font-size:12px;opacity:.6;margin-top:4px;" id="verdict-sub"></div>
+        </div>
+        <div class="verdict-scores">
+          <div class="verdict-score-row" style="margin-bottom:4px;">
+            <span class="verdict-score-num" id="res-h-num" style="color:#ff9087;"></span>
+            <span class="verdict-score-name">夫</span>
+          </div>
+          <div class="verdict-score-row">
+            <span class="verdict-score-num" id="res-w-num" style="color:#7ee8e6;"></span>
+            <span class="verdict-score-name">妻</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- score bars -->
+      <div class="card">
+        <div class="card-header">スコア</div>
+        <div class="card-body">
+          <div class="score-bar-row">
+            <span class="score-bar-label" style="color:var(--h);">夫</span>
+            <div class="score-bar-track">
+              <div class="score-bar-fill" id="bar-h" style="background:var(--h);width:0%"></div>
+            </div>
+            <span class="score-bar-num" id="num-h" style="color:var(--h);"></span>
+          </div>
+          <div class="fifty-line"><span>← 理想は 50 : 50 →</span></div>
+          <div class="score-bar-row">
+            <span class="score-bar-label" style="color:var(--w);">妻</span>
+            <div class="score-bar-track">
+              <div class="score-bar-fill" id="bar-w" style="background:var(--w);width:0%"></div>
+            </div>
+            <span class="score-bar-num" id="num-w" style="color:var(--w);"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- breakdown -->
+      <div class="card">
+        <div class="card-header">項目別の内訳</div>
+        <div class="card-body" style="padding:10px 18px;">
+          <div class="breakdown-row" style="padding-top:4px;border-bottom:1.5px solid var(--border);">
+            <span style="font-size:11px;font-weight:700;color:var(--muted);">項目</span>
+            <span></span>
+            <span style="font-size:11px;font-weight:700;color:var(--h);text-align:right;">夫</span>
+            <span style="font-size:11px;font-weight:700;color:var(--w);text-align:right;">妻</span>
+          </div>
+          <div id="breakdown-rows"></div>
+        </div>
+      </div>
+
+      <!-- child report -->
+      <div class="card hidden" id="child-report">
+        <div class="card-header">育児負荷レポート</div>
+        <div class="card-body" id="child-report-body"></div>
+      </div>
+
+      <!-- share -->
+      <div class="share-card">
+        <div class="share-card-title">うちのスコア</div>
+        <div class="share-scores-row">
+          <div class="share-fighter h">
+            <div class="share-fighter-num" id="sh-h">--</div>
+            <div class="share-fighter-lbl">夫のスコア</div>
+          </div>
+          <div class="share-vs">VS</div>
+          <div class="share-fighter w">
+            <div class="share-fighter-num" id="sh-w">--</div>
+            <div class="share-fighter-lbl">妻のスコア</div>
+          </div>
+        </div>
+        <div class="share-verdict" id="sh-verdict"></div>
+        <div class="share-tag">#うちのスコア</div>
+        <div class="share-btns">
+          <button class="share-btn x" onclick="shareX()">𝕏 ポスト</button>
+          <button class="share-btn line" onclick="shareLine()">LINE で送る</button>
+          <button class="share-btn threads" onclick="shareThreads()">Threads</button>
+          <button class="share-btn copy" onclick="copyResult()">📋 コピー</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CALIBRATION ===== -->
+  <div class="section" id="tab-survey">
+    <div class="cal-intro">
+      <div class="cal-intro-title">みんなの「中立」を決めよう</div>
+      <div class="cal-intro-desc">実際のケースのスコアを見て、妥当かどうか投票してください。みんなの感覚でアルゴリズムを磨いていきます。</div>
+      <div class="cal-progress-wrap">
+        <div class="cal-progress-label">
+          <span>回答の進捗</span>
+          <span id="cal-progress-txt">0 / 7 ケース</span>
+        </div>
+        <div class="cal-progress-bar">
+          <div class="cal-progress-fill" id="cal-progress-fill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+    <div id="survey-cases"></div>
+  </div>
+
+</div>
+<script>
+// ── SLIDER ──
+function syncSlider(cat, val, who) {
+  val = parseInt(val);
+  const other = who === 'h' ? 'w' : 'h';
+  document.getElementById(`${cat}-${other}`).value = 100 - val;
+  document.getElementById(`${cat}-${who}-v`).textContent = val + '%';
+  document.getElementById(`${cat}-${other}-v`).textContent = (100 - val) + '%';
+}
+
+// ── HOUSE MODE ──
+let houseMode = 'simple';
+function setHouseMode(mode) {
+  houseMode = mode;
+  document.getElementById('house-simple').style.display = mode === 'simple' ? 'block' : 'none';
+  document.getElementById('house-detail').style.display = mode === 'detail' ? 'block' : 'none';
+  document.getElementById('mode-simple').classList.toggle('active', mode === 'simple');
+  document.getElementById('mode-detail').classList.toggle('active', mode === 'detail');
+  if (mode === 'detail') syncDetailToSlider();
+}
+
+function syncDetailToSlider() {
+  const cats = ['cooking','cleaning','shopping','childcare','mental'];
+  const icons = {cooking:'🍳',cleaning:'🧹',shopping:'🛒',childcare:'👶',mental:'🧠'};
+  const names = {cooking:'料理',cleaning:'掃除・洗濯',shopping:'買い物',childcare:'育児',mental:'名もなき家事'};
+  const preview = [];
+  cats.forEach(cat => {
+    const hv = parseFloat(document.getElementById(`d-${cat}-h`)?.value) || 0;
+    const wv = parseFloat(document.getElementById(`d-${cat}-w`)?.value) || 0;
+    const tot = hv + wv;
+    if (tot > 0) {
+      const hPct = Math.round(hv / tot * 100);
+      document.getElementById(`${cat}-h`).value = hPct;
+      document.getElementById(`${cat}-w`).value = 100 - hPct;
+      document.getElementById(`${cat}-h-v`).textContent = hPct + '%';
+      document.getElementById(`${cat}-w-v`).textContent = (100 - hPct) + '%';
+      preview.push({cat, hPct});
+    }
+  });
+  const prevEl = document.getElementById('detail-preview');
+  if (preview.length) {
+    prevEl.style.display = 'block';
+    document.getElementById('detail-preview-bars').innerHTML = preview.map(p => `
+      <div class="preview-bar-row">
+        <div class="preview-bar-meta">
+          <span style="color:var(--muted);font-size:12px;">${icons[p.cat]} ${names[p.cat]}</span>
+          <span><span style="color:var(--h);font-weight:700;">${p.hPct}%</span> / <span style="color:var(--w);font-weight:700;">${100-p.hPct}%</span></span>
+        </div>
+        <div class="preview-bar-track">
+          <div class="preview-bar-h" style="width:${p.hPct}%;"></div>
+          <div class="preview-bar-w" style="width:${100-p.hPct}%;"></div>
+        </div>
+      </div>`).join('');
+  } else { prevEl.style.display = 'none'; }
+}
+
+// ── CHILDREN ──
+let children = [];
+const ageGroups = ['0〜1歳','2〜3歳','4〜6歳','7〜12歳','13〜18歳'];
+const ageBurden = {'0〜1歳':1.0,'2〜3歳':0.8,'4〜6歳':0.5,'7〜12歳':0.3,'13〜18歳':0.15};
+function addChild() {
+  if (children.length >= 8) return;
+  children.push('0〜1歳');
+  renderChildren();
+}
+function removeChild() {
+  if (!children.length) return;
+  children.pop();
+  renderChildren();
+}
+function renderChildren() {
+  document.getElementById('children-list').innerHTML = children.map((ag, i) => `
+    <div class="child-tag">
+      <span>👶</span>
+      <select onchange="children[${i}]=this.value;updateChildBurden()">
+        ${ageGroups.map(a => `<option${a===ag?' selected':''}>${a}</option>`).join('')}
+      </select>
+    </div>`).join('');
+  updateChildBurden();
+}
+function updateChildBurden() {
+  const el = document.getElementById('child-burden-info');
+  if (!children.length) { el.textContent = ''; return; }
+  const tot = children.reduce((s, ag) => s + ageBurden[ag], 0);
+  const lbl = tot > 1.5 ? '🔥 かなりハード' : tot > 0.8 ? '😤 そこそこ大変' : '😊 少し余裕あり';
+  el.textContent = `育児負荷：${lbl}`;
+}
+
+// ── CALCULATE ──
+const wtFactor = {office:1.0,remote:0.9,flex:0.95,part:0.6,none:0.0};
+const wtCommute = {office:10,remote:0,flex:5,part:5,none:0};
+function gn(id) { return parseFloat(document.getElementById(id).value) || 0; }
+function gs(cat) { return parseInt(document.getElementById(cat+'-h').value); }
+
+function calculate() {
+  const hInc = gn('h-income'), wInc = gn('w-income');
+  const hWork = gn('h-work'), wWork = gn('w-work');
+  const hSleep = gn('h-sleep'), wSleep = gn('w-sleep');
+  const hWT = document.getElementById('h-worktype').value;
+  const wWT = document.getElementById('w-worktype').value;
+  const cooking = gs('cooking'), cleaning = gs('cleaning');
+  const shopping = gs('shopping'), childcare = gs('childcare'), mental = gs('mental');
+
+  const childLoad = children.reduce((s, ag) => s + ageBurden[ag], 0);
+  const childW = Math.min(childLoad * 0.12, 0.25);
+
+  const totalInc = hInc + wInc || 1;
+  const hIncP = hInc / totalInc * 100, wIncP = 100 - hIncP;
+  const hWe = hWork * wtFactor[hWT] + wtCommute[hWT];
+  const wWe = wWork * wtFactor[wWT] + wtCommute[wWT];
+  const totalWe = hWe + wWe || 1;
+  const hWP = hWe / totalWe * 100, wWP = 100 - hWP;
+  const hSS = Math.max(0, 9 - hSleep), wSS = Math.max(0, 9 - wSleep);
+  const totalSS = hSS + wSS || 1;
+  const hSP = hSS / totalSS * 100, wSP = 100 - hSP;
+  const hHouse = (cooking + cleaning + shopping + mental) / 4;
+  const wHouse = 100 - hHouse;
+
+  const w = { income:0.25, work:0.18, sleep:0.07, house:0.30, child:0.20 + childW };
+  const wSum = Object.values(w).reduce((a,b)=>a+b,0);
+  Object.keys(w).forEach(k => w[k] /= wSum);
+
+  const hRaw = hIncP*w.income + hWP*w.work + hSP*w.sleep + hHouse*w.house + childcare*w.child;
+  const wRaw = wIncP*w.income + wWP*w.work + wSP*w.sleep + wHouse*w.house + (100-childcare)*w.child;
+  const norm = hRaw + wRaw;
+  const hScore = Math.round(hRaw / norm * 100);
+  const wScore = 100 - hScore;
+
+  // verdict
+  const diff = Math.abs(hScore - wScore);
+  let verdict, sub;
+  if (diff <= 5)       { verdict = 'ほぼ公平';             sub = 'バランスは取れています。この調子で。'; }
+  else if (hScore > wScore) {
+    if (diff <= 15)    { verdict = '夫がやや多め';          sub = 'もう少し家事を分担できるかも。'; }
+    else if (diff <= 25){ verdict = '夫の負担が大きい';      sub = '夫への感謝と、負担の見直しを。'; }
+    else               { verdict = '夫への負荷が限界に近い'; sub = 'このまま続くと燃え尽きます。早急に話し合いを。'; }
+  } else {
+    if (diff <= 15)    { verdict = '妻がやや多め';          sub = 'もう少し家事を分担できるかも。'; }
+    else if (diff <= 25){ verdict = '妻の負担が大きい';      sub = '妻への感謝と、負担の見直しを。'; }
+    else               { verdict = '妻への負荷が限界に近い'; sub = 'このまま続くと燃え尽きます。早急に話し合いを。'; }
+  }
+
+  // display
+  document.getElementById('results').classList.remove('hidden');
+  document.getElementById('verdict-text').textContent = verdict;
+  document.getElementById('verdict-sub').textContent = sub;
+  document.getElementById('res-h-num').textContent = hScore;
+  document.getElementById('res-w-num').textContent = wScore;
+
+  setTimeout(() => {
+    document.getElementById('bar-h').style.width = hScore + '%';
+    document.getElementById('bar-h').textContent = hScore + 'pt';
+    document.getElementById('bar-w').style.width = wScore + '%';
+    document.getElementById('bar-w').textContent = wScore + 'pt';
+  }, 150);
+  document.getElementById('num-h').textContent = hScore;
+  document.getElementById('num-w').textContent = wScore;
+
+  // breakdown
+  const cats = [
+    {name:'💴 年収貢献',     h:Math.round(hIncP), w:Math.round(wIncP)},
+    {name:'⏱ 労働時間',     h:Math.round(hWP),  w:Math.round(wWP)},
+    {name:'🌙 睡眠犠牲',    h:Math.round(hSP),  w:Math.round(wSP)},
+    {name:'🍳 料理',         h:cooking,          w:100-cooking},
+    {name:'🧹 掃除・洗濯',  h:cleaning,         w:100-cleaning},
+    {name:'🛒 買い物',       h:shopping,         w:100-shopping},
+    {name:'👶 育児',         h:childcare,        w:100-childcare},
+    {name:'🧠 名もなき家事',h:mental,           w:100-mental},
+  ];
+  document.getElementById('breakdown-rows').innerHTML = cats.map(c => `
+    <div class="breakdown-row">
+      <span class="breakdown-name">${c.name}</span>
+      <div class="breakdown-bar">
+        <div class="breakdown-bar-h" style="width:${c.h}%"></div>
+        <div class="breakdown-bar-w" style="width:${c.w}%"></div>
+      </div>
+      <span class="breakdown-pct-h">${c.h}%</span>
+      <span class="breakdown-pct-w">${c.w}%</span>
+    </div>`).join('');
+
+  // child report
+  if (children.length) {
+    document.getElementById('child-report').classList.remove('hidden');
+    const perH = Math.round(childcare / 100 * childLoad * 10);
+    const perW = Math.round((100-childcare) / 100 * childLoad * 10);
+    document.getElementById('child-report-body').innerHTML = `
+      <div style="font-size:13px;line-height:2;color:var(--muted);">
+        子ども：<b style="color:var(--text)">${children.length}人（${children.join('、')}）</b><br>
+        育児負荷係数：<b style="color:var(--text)">${childLoad.toFixed(1)}</b>
+        ${childLoad>1.5?'🔥':childLoad>0.8?'😤':'😊'}<br>
+        夫の育児換算：<b style="color:var(--h)">週約${perH}h相当</b><br>
+        妻の育児換算：<b style="color:var(--w)">週約${perW}h相当</b>
+      </div>`;
+  } else {
+    document.getElementById('child-report').classList.add('hidden');
+  }
+
+  // share
+  document.getElementById('sh-h').textContent = hScore;
+  document.getElementById('sh-w').textContent = wScore;
+  document.getElementById('sh-verdict').textContent = verdict;
+  window._result = {hScore, wScore, verdict};
+  setTimeout(() => document.getElementById('results').scrollIntoView({behavior:'smooth'}), 300);
+}
+
+// ── SHARE ──
+function shareX() {
+  if (!window._result) return;
+  const {hScore,wScore,verdict} = window._result;
+  const t = `【うちのスコア】\n夫 ${hScore}pt vs 妻 ${wScore}pt\n${verdict}\n#うちのスコア`;
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(t)}`,'_blank');
+}
+function shareLine() {
+  if (!window._result) return;
+  const {hScore,wScore,verdict} = window._result;
+  const t = `【うちのスコア】夫${hScore}pt / 妻${wScore}pt\n${verdict}\n#うちのスコア`;
+  window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent('https://uchiscore.jp')}&text=${encodeURIComponent(t)}`,'_blank');
+}
+function shareThreads() {
+  if (!window._result) return;
+  const {hScore,wScore,verdict} = window._result;
+  const t = `【うちのスコア】夫${hScore}pt vs 妻${wScore}pt ${verdict} #うちのスコア`;
+  window.open(`https://www.threads.net/intent/post?text=${encodeURIComponent(t)}`,'_blank');
+}
+function copyResult() {
+  if (!window._result) return;
+  const {hScore,wScore,verdict} = window._result;
+  navigator.clipboard.writeText(`【うちのスコア】夫${hScore}pt / 妻${wScore}pt — ${verdict} #うちのスコア`);
+  alert('コピーしました！');
+}
+
+// ── TABS ──
+function switchTab(tab, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  el.classList.add('active');
+  if (tab === 'survey') renderSurvey();
+}
+
+// ── CALIBRATION ──
+const VISIBLE = 5;
+const calVoted = {};
+const voteLabels = ['妥当だと思う','もっと夫が高いはず','もっと妻が高いはず','どちらとも言えない'];
+const voteColors = ['var(--green)','var(--h)','var(--w)','var(--muted)'];
+
+const calCases = [
+  {id:0,tag:'Case 01',title:'年収1,200万の夫・週70h出社。妻は専業で家事育児9割担当。',
+   h:{income:'1,200万',work:'週70h',sleep:'5.5h',type:'出社'},
+   w:{income:'0万',work:'家事専業',sleep:'6.5h',type:'専業'},kids:'なし',
+   housework:{cooking:10,cleaning:10,shopping:20,childcare:10,named:5},
+   hScore:62,wScore:38,verdict:'夫の負担が大きい',votes:[312,189,445,98],totalVotes:1044},
+  {id:1,tag:'Case 02',title:'共働きフルタイム同士、年収差100万。家事は妻7割・育児8割。',
+   h:{income:'500万',work:'週45h',sleep:'8h',type:'出社'},
+   w:{income:'400万',work:'週40h',sleep:'6h',type:'出社'},kids:'小学生2人',
+   housework:{cooking:25,cleaning:20,shopping:35,childcare:20,named:15},
+   hScore:38,wScore:62,verdict:'妻の負担が大きい',votes:[521,98,187,134],totalVotes:940},
+  {id:2,tag:'Case 03',title:'産休中の妻、0歳＋3歳の育児を9割担当。夫はリモート700万。',
+   h:{income:'700万',work:'週50h',sleep:'8h',type:'リモート'},
+   w:{income:'産休中',work:'育児専任',sleep:'4h(断続)',type:'休業'},kids:'0歳・3歳',
+   housework:{cooking:15,cleaning:10,shopping:25,childcare:10,named:10},
+   hScore:34,wScore:66,verdict:'妻への負荷が限界に近い',votes:[234,78,678,156],totalVotes:1146},
+  {id:3,tag:'Case 04',title:'夫が単身赴任・月2回帰宅。妻はフルタイム＋ワンオペ育児。',
+   h:{income:'650万',work:'週55h',sleep:'7h',type:'出社(単身)'},
+   w:{income:'350万',work:'週40h',sleep:'5.5h',type:'出社'},kids:'4歳・7歳',
+   housework:{cooking:5,cleaning:5,shopping:10,childcare:5,named:10},
+   hScore:41,wScore:59,verdict:'妻がやや多め',votes:[188,312,234,89],totalVotes:823},
+  {id:4,tag:'Case 05',title:'夫が転職して無職3ヶ月。妻が主な収入源、家事も妻6割。',
+   h:{income:'0万(求職中)',work:'家事・就活',sleep:'8h',type:'無職'},
+   w:{income:'480万',work:'週45h',sleep:'6.5h',type:'出社'},kids:'なし',
+   housework:{cooking:40,cleaning:45,shopping:40,childcare:0,named:30},
+   hScore:46,wScore:54,verdict:'ほぼ公平',votes:[145,267,198,312],totalVotes:922},
+  {id:5,tag:'Case 06',title:'共働き子なし。夫リモート・妻出社。家事は夫6割担当。',
+   h:{income:'550万',work:'週42h',sleep:'7.5h',type:'リモート'},
+   w:{income:'520万',work:'週40h',sleep:'7h',type:'出社'},kids:'なし',
+   housework:{cooking:60,cleaning:65,shopping:55,childcare:0,named:40},
+   hScore:55,wScore:45,verdict:'夫がやや多め',votes:[423,89,178,134],totalVotes:824},
+  {id:6,tag:'Case 07',title:'育休中の夫（半年）。育児は妻7割、家事は夫6割の分担。',
+   h:{income:'0万(育休)',work:'育休・家事',sleep:'6h',type:'育休'},
+   w:{income:'0万(育休)',work:'育休・育児',sleep:'5h(断続)',type:'育休'},kids:'0歳',
+   housework:{cooking:60,cleaning:65,shopping:55,childcare:30,named:45},
+   hScore:48,wScore:52,verdict:'ほぼ公平',votes:[356,134,201,89],totalVotes:780},
+];
+
+function getSorted() {
+  return [...calCases].sort((a,b) => b.totalVotes - a.totalVotes);
+}
+
+function renderSurvey() {
+  const vc = Object.keys(calVoted).length;
+  const pct = Math.round(vc / calCases.length * 100);
+  document.getElementById('cal-progress-fill').style.width = pct + '%';
+  document.getElementById('cal-progress-txt').textContent = `${vc} / ${calCases.length} ケース`;
+
+  const sorted = getSorted();
+  const vis = sorted.slice(0, VISIBLE);
+  const hid = sorted.slice(VISIBLE);
+
+  let html = vis.map(c => renderCalCase(c)).join('');
+  if (hid.length) {
+    const isOpen = document.getElementById('cal-more')?.dataset.open === '1';
+    html += `<button class="cal-more-btn" id="cal-more-btn" onclick="toggleMore()">
+      ${isOpen ? '▲ 折りたたむ' : `▼ さらに ${hid.length} ケースを見る`}
+    </button>
+    <div id="cal-more" data-open="${isOpen?'1':'0'}" style="display:${isOpen?'block':'none'}">
+      ${hid.map(c => renderCalCase(c)).join('')}
+    </div>`;
+  }
+  document.getElementById('survey-cases').innerHTML = html;
+
+  // アニメ
+  calCases.forEach(c => {
+    if (calVoted[c.id] !== undefined) setTimeout(() => animateBars(c.id), 120);
+  });
+}
+
+function toggleMore() {
+  const el = document.getElementById('cal-more');
+  const btn = document.getElementById('cal-more-btn');
+  const isOpen = el.dataset.open === '1';
+  el.style.display = isOpen ? 'none' : 'block';
+  el.dataset.open = isOpen ? '0' : '1';
+  btn.textContent = isOpen
+    ? `▼ さらに ${calCases.length - VISIBLE} ケースを見る`
+    : '▲ 折りたたむ';
+  if (!isOpen) {
+    getSorted().slice(VISIBLE).forEach(c => {
+      if (calVoted[c.id] !== undefined) setTimeout(() => animateBars(c.id), 120);
+    });
+  }
+}
+
+function renderCalCase(c) {
+  const voted = calVoted[c.id];
+  const hasVoted = voted !== undefined;
+  const total = c.votes.reduce((a,b)=>a+b,0);
+  const hot = c.totalVotes >= 1000;
+  const hwItems = [
+    ['🍳 料理', c.housework.cooking],
+    ['🧹 掃除・洗濯', c.housework.cleaning],
+    ['🛒 買い物', c.housework.shopping],
+    ['👶 育児', c.housework.childcare],
+    ['🧠 名もなき家事', c.housework.named],
+  ];
+
+  return `
+  <div class="cal-case" id="calcase-${c.id}">
+    <div class="cal-case-header">
+      <span class="cal-case-tag">${c.tag}</span>
+      <div class="cal-case-meta">
+        ${hot ? '<span class="hot-badge">🔥 HOT</span>' : ''}
+        <span class="cal-votes-count">${c.totalVotes.toLocaleString()}票</span>
+      </div>
+    </div>
+    <div class="cal-case-body">
+      <div class="cal-case-title">${c.title}</div>
+
+      <div class="cal-scores">
+        <div class="cal-score-box h">
+          <div class="cal-score-who">夫</div>
+          <div class="cal-score-num">${c.hScore}</div>
+          <div class="cal-score-pt">pt</div>
+        </div>
+        <div class="cal-vs">VS</div>
+        <div class="cal-score-box w">
+          <div class="cal-score-who">妻</div>
+          <div class="cal-score-num">${c.wScore}</div>
+          <div class="cal-score-pt">pt</div>
+        </div>
+      </div>
+      <div class="cal-verdict">${c.verdict}</div>
+
+      <button class="cal-detail-btn" id="dbtn-${c.id}" onclick="toggleCalDetail(${c.id})">詳細データを見る ▼</button>
+      <div class="cal-detail-panel" id="cdp-${c.id}">
+        <div class="cal-data-grid">
+          <div class="cal-data-box h">
+            <div class="cal-data-who">夫</div>
+            <div class="cal-data-item">年収 <b>${c.h.income}</b></div>
+            <div class="cal-data-item">労働 <b>${c.h.work}</b></div>
+            <div class="cal-data-item">睡眠 <b>${c.h.sleep}</b></div>
+            <div class="cal-data-item">形態 <b>${c.h.type}</b></div>
+          </div>
+          <div class="cal-data-box w">
+            <div class="cal-data-who">妻</div>
+            <div class="cal-data-item">年収 <b>${c.w.income}</b></div>
+            <div class="cal-data-item">労働 <b>${c.w.work}</b></div>
+            <div class="cal-data-item">睡眠 <b>${c.w.sleep}</b></div>
+            <div class="cal-data-item">形態 <b>${c.w.type}</b></div>
+          </div>
+        </div>
+        <div class="cal-kids-row">👶 こども：<b>${c.kids}</b></div>
+        <div class="cal-house-bars">
+          <div class="cal-house-label">家事・育児の分担（夫 / 妻）</div>
+          ${hwItems.map(([label, hPct]) => `
+            <div class="cal-hbar-row">
+              <div class="cal-hbar-meta">
+                <span class="cal-hbar-name">${label}</span>
+                <span class="cal-hbar-pcts"><span>${hPct}%</span> / <span>${100-hPct}%</span></span>
+              </div>
+              <div class="cal-hbar-track">
+                <div class="cal-hbar-h" style="width:${hPct}%"></div>
+                <div class="cal-hbar-w" style="width:${100-hPct}%"></div>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <div class="cal-vote-q">このスコアは妥当だと思いますか？</div>
+      ${hasVoted ? `
+        <div id="cal-res-${c.id}">
+          ${voteLabels.map((lbl,i) => {
+            const pct = Math.round(c.votes[i]/total*100);
+            const isMe = voted === i;
+            return `<div class="cal-result-row">
+              <div class="cal-result-meta">
+                <span class="cal-result-lbl ${isMe?'chosen':''}">${isMe?'→ ':''} ${lbl}</span>
+                <span class="cal-result-pct">${pct}%</span>
+              </div>
+              <div class="cal-result-track">
+                <div class="cal-result-fill" data-pct="${pct}" style="width:0%;background:${voteColors[i]};"></div>
+              </div>
+            </div>`;
+          }).join('')}
+          <div class="cal-result-total">${total.toLocaleString()}票</div>
+        </div>` : `
+        <div class="cal-vote-opts">
+          ${voteLabels.map((lbl,i) => `
+            <button class="cal-vote-btn" onclick="castVote(${c.id},${i})">${lbl}</button>`).join('')}
+        </div>`}
+    </div>
+  </div>`;
+}
+
+function toggleCalDetail(id) {
+  const el = document.getElementById(`cdp-${id}`);
+  const btn = document.getElementById(`dbtn-${id}`);
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  btn.textContent = open ? '詳細データを見る ▼' : '詳細を閉じる ▲';
+}
+
+function castVote(caseId, optIdx) {
+  if (calVoted[caseId] !== undefined) return;
+  calVoted[caseId] = optIdx;
+  calCases[caseId].votes[optIdx]++;
+  calCases[caseId].totalVotes++;
+  renderSurvey();
+  setTimeout(() => animateBars(caseId), 120);
+}
+
+function animateBars(id) {
+  document.querySelectorAll(`#calcase-${id} .cal-result-fill`).forEach(el => {
+    el.style.width = el.dataset.pct + '%';
+  });
+}
+
+// ── INIT ──
+renderChildren();
+</script>
+</body>
+</html>
