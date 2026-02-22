@@ -3,7 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a1a1a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="うちのスコア">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>うちのスコア｜夫婦の貢献度、数字で見てみよう</title>
+
+<!-- ── OGP ── -->
+<meta property="og:type"        content="website">
+<meta property="og:url"         content="https://uchiscore.jp/">
+<meta property="og:title"       content="うちのスコア｜夫婦の貢献度、数字で見てみよう">
+<meta property="og:description" content="年収・労働時間・家事の分担を入力するだけ。夫婦どちらが負担しているか、数字でわかる診断アプリ。中立に、正直に。">
+<meta property="og:image"       content="https://uchiscore.jp/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale"      content="ja_JP">
+<meta property="og:site_name"   content="うちのスコア">
+
+<!-- Twitter Card -->
+<meta name="twitter:card"        content="summary_large_image">
+<meta name="twitter:site"        content="@uchiscore_jp">
+<meta name="twitter:title"       content="うちのスコア｜夫婦の貢献度、数字で見てみよう">
+<meta name="twitter:description" content="年収・労働時間・家事の分担を入力するだけ。夫婦どちらが負担しているか、数字でわかる。">
+<meta name="twitter:image"       content="https://uchiscore.jp/ogp.png">
+
+<!-- その他SEO -->
+<meta name="description" content="年収・労働時間・家事分担を入力して夫婦の貢献度スコアを計算。みんなの投票でアルゴリズムを磨く夫婦診断アプリ。">
+<link rel="canonical" href="https://uchiscore.jp/">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
@@ -54,6 +84,16 @@ header {
   margin-top: 6px;
   letter-spacing: 0.5px;
 }
+.beta-note {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: var(--bg);
+  border-left: 3px solid var(--border);
+  border-radius: 0 4px 4px 0;
+  line-height: 1.6;
+}
 
 /* ── TABS ── */
 .tabs {
@@ -63,8 +103,10 @@ header {
   border-bottom: 2px solid var(--text);
 }
 .tab {
-  padding: 10px 20px;
-  font-size: 13px;
+  flex: 1;
+  text-align: center;
+  padding: 12px 20px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--muted);
   cursor: pointer;
@@ -224,7 +266,15 @@ input[type=range] {
 }
 .h-range input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 18px; height: 18px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--h);
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+.h-range input[type=range]::-moz-range-thumb {
+  width: 22px; height: 22px;
   border-radius: 50%;
   background: var(--h);
   cursor: pointer;
@@ -233,13 +283,23 @@ input[type=range] {
 }
 .w-range input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 18px; height: 18px;
+  width: 22px; height: 22px;
   border-radius: 50%;
   background: var(--w);
   cursor: pointer;
   border: 2px solid white;
   box-shadow: 0 1px 4px rgba(0,0,0,.2);
 }
+.w-range input[type=range]::-moz-range-thumb {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--w);
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+.h-range input[type=range] { accent-color: var(--h); }
+.w-range input[type=range] { accent-color: var(--w); }
 
 /* ── DETAIL INPUT ── */
 .detail-grid {
@@ -661,6 +721,195 @@ input[type=range] {
 }
 .cal-more-btn:hover { border-color: var(--text); color: var(--text); }
 
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #1a1a1a;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0;
+  transition: all .25s;
+  z-index: 9999;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.toast.error { background: #c0392b; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── SORT TABS ── */
+.sort-tab {
+  flex: 1; text-align: center;
+  padding: 9px 8px;
+  font-size: 13px; font-weight: 700;
+  color: var(--muted);
+  border: none; background: none;
+  font-family: inherit; cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all .15s;
+}
+.sort-tab.active { color: var(--text); border-bottom-color: var(--text); }
+.sort-tab:hover:not(.active) { color: var(--text); }
+
+/* 物議バッジ */
+.controversy-badge {
+  display: inline-block;
+  background: #7c3aed;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* ── REGION ── */
+.region-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+@media (max-width: 400px) {
+  .region-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.region-btn {
+  padding: 9px 4px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: white;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+  text-align: center;
+}
+.region-btn:hover { border-color: var(--text); color: var(--text); }
+.region-btn.selected {
+  background: var(--text);
+  color: white;
+  border-color: var(--text);
+}
+
+/* ── ONE SLIDER (かんたんモード A案) ── */
+.one-slider-row {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.os-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.os-pcts {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 900;
+}
+.os-sep { font-size: 10px; color: var(--border); font-weight: 400; }
+.os-wrap {
+  position: relative;
+  height: 28px;
+}
+.os-bar {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  pointer-events: none;
+}
+.os-bar-h { background: var(--h); opacity: .75; transition: width .04s; }
+.os-bar-w { background: var(--w); opacity: .75; transition: width .04s; }
+.os-midline {
+  position: absolute;
+  left: 50%; top: 0; bottom: 0;
+  width: 2.5px;
+  background: white;
+  opacity: .7;
+  transform: translateX(-50%);
+}
+.os-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  margin: 0;
+  z-index: 2;
+  -webkit-appearance: none;
+}
+.os-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 5px;
+}
+.os-step-btn {
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border);
+  background: white;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text);
+  font-family: inherit;
+  transition: all .1s;
+  flex-shrink: 0;
+}
+.os-step-btn:hover { border-color: var(--text); }
+.os-step-btn.h-btn { border-color: var(--h-mid); color: var(--h); }
+.os-step-btn.h-btn:hover { background: var(--h-light); }
+.os-step-btn.w-btn { border-color: var(--w-mid); color: var(--w); }
+.os-step-btn.w-btn:hover { background: var(--w-light); }
+.os-step-label { font-size: 11px; color: var(--muted); flex: 1; text-align: center; }
+
+/* ── TASK CARDS ── */
+.task-row {
+  margin-bottom: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.task-row:last-of-type { border-bottom: none; }
+.task-name { font-size: 13px; font-weight: 500; margin-bottom: 8px; }
+.task-btns { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.tbtn {
+  padding: 6px 2px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+  transition: all .12s;
+  line-height: 1.3;
+}
+.tbtn:hover { border-color: var(--text); color: var(--text); }
+.tbtn.selected-h { background: var(--h-light); border-color: var(--h); color: var(--h); }
+.tbtn.selected-half { background: #f5f5f0; border-color: var(--muted); color: var(--text); }
+.tbtn.selected-w { background: var(--w-light); border-color: var(--w); color: var(--w); }
+
 /* ── UTIL ── */
 .hidden { display: none !important; }
 @media (max-width: 480px) {
@@ -671,11 +920,16 @@ input[type=range] {
 </style>
 </head>
 <body>
+<div class="toast" id="toast"></div>
 <div class="app">
 
   <header>
     <div class="logo">うちの<span>スコア</span></div>
     <div class="tagline">夫婦の貢献度を数字で見てみよう。中立に、正直に。</div>
+    <div class="beta-note">β版 — 中立ラインは投票で変わります。あなたの感覚が、世の中の基準を作ります。
+      <span onclick="switchTab('survey', document.querySelector('.tab:nth-child(2)'))"
+        style="color:var(--h);cursor:pointer;font-weight:700;text-decoration:underline;margin-left:4px;">→ 投票はこちら</span>
+    </div>
   </header>
 
   <div class="tabs">
@@ -697,13 +951,18 @@ input[type=range] {
           <div class="field"><label>週の労働時間（h）</label><input type="number" id="h-work" value="50" min="0" max="100"></div>
           <div class="field"><label>平均睡眠（h/日）</label><input type="number" id="h-sleep" value="7" min="0" max="12" step="0.5"></div>
           <div class="field"><label>勤務形態</label>
-            <select id="h-worktype">
+            <select id="h-worktype" onchange="toggleCommute('h')">
               <option value="office">出社</option>
               <option value="remote">リモート</option>
               <option value="flex">フレックス</option>
               <option value="part">パート</option>
+              <option value="leave">産休・育休中</option>
               <option value="none">専業・無職</option>
             </select>
+          </div>
+          <div class="field" id="h-commute-field">
+            <label>片道通勤時間（分）</label>
+            <input type="number" id="h-commute" value="30" min="0" max="180">
           </div>
         </div>
       </div>
@@ -717,13 +976,18 @@ input[type=range] {
           <div class="field"><label>週の労働時間（h）</label><input type="number" id="w-work" value="30" min="0" max="100"></div>
           <div class="field"><label>平均睡眠（h/日）</label><input type="number" id="w-sleep" value="6" min="0" max="12" step="0.5"></div>
           <div class="field"><label>勤務形態</label>
-            <select id="w-worktype">
+            <select id="w-worktype" onchange="toggleCommute('w')">
               <option value="office">出社</option>
               <option value="remote">リモート</option>
               <option value="flex">フレックス</option>
               <option value="part" selected>パート</option>
+              <option value="leave">産休・育休中</option>
               <option value="none">専業・無職</option>
             </select>
+          </div>
+          <div class="field" id="w-commute-field" style="display:none;">
+            <label>片道通勤時間（分）</label>
+            <input type="number" id="w-commute" value="30" min="0" max="180">
           </div>
         </div>
       </div>
@@ -736,9 +1000,32 @@ input[type=range] {
         <div class="children-tags" id="children-list"></div>
         <div class="child-btns">
           <button class="child-add" onclick="addChild()">＋ 追加</button>
-          <button class="child-rm" onclick="removeChild()">－ 削除</button>
+          <button class="child-rm" onclick="deleteChild()">－ 削除</button>
         </div>
         <div class="child-load-label" id="child-burden-info"></div>
+      </div>
+    </div>
+
+    <!-- 地域（任意） -->
+    <div class="card">
+      <div class="card-header">
+        <span>お住まいの地域</span>
+        <span style="font-size:11px;color:var(--muted);font-weight:400;">任意・地域別の傾向分析に使用</span>
+      </div>
+      <div class="card-body">
+        <div class="region-grid" id="region-grid">
+          <button class="region-btn" onclick="selectRegion(this,'北海道')">北海道</button>
+          <button class="region-btn" onclick="selectRegion(this,'東北')">東北</button>
+          <button class="region-btn" onclick="selectRegion(this,'関東')">関東</button>
+          <button class="region-btn" onclick="selectRegion(this,'中部')">中部</button>
+          <button class="region-btn" onclick="selectRegion(this,'近畿')">近畿</button>
+          <button class="region-btn" onclick="selectRegion(this,'中国・四国')">中国・四国</button>
+          <button class="region-btn" onclick="selectRegion(this,'九州・沖縄')">九州・沖縄</button>
+          <button class="region-btn" onclick="selectRegion(this,'海外')">海外</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px;">
+          選択しなくてもスコアは計算できます
+        </div>
       </div>
     </div>
 
@@ -753,63 +1040,362 @@ input[type=range] {
       </div>
       <div class="card-body">
         <div id="house-simple">
-          <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">夫・妻それぞれの担当割合をスライダーで設定</div>
-          ${['cooking','cleaning','shopping','childcare','mental'].map((cat, i) => {
-            const info = [
-              {name:'料理', icon:'🍳', hd:30, wd:70},
-              {name:'掃除・洗濯', icon:'🧹', hd:20, wd:80},
-              {name:'買い物', icon:'🛒', hd:40, wd:60},
-              {name:'育児', icon:'👶', hd:25, wd:75},
-              {name:'名もなき家事', icon:'🧠', hd:20, wd:80},
-            ][i];
-            return `
-            <div class="slider-row">
-              <div class="slider-meta">
-                <span class="slider-name">${info.icon} ${info.name}</span>
-                <div class="slider-pcts">
-                  <span class="pct-h" id="${cat}-h-v">${info.hd}%</span>
-                  <span class="pct-sep">/</span>
-                  <span class="pct-w" id="${cat}-w-v">${info.wd}%</span>
-                </div>
+          <!-- ヘッダー凡例 -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <span style="font-size:12px;font-weight:900;color:var(--h);">
+              ← 夫
+            </span>
+            <span style="font-size:11px;color:var(--muted);">バーを左右にスライド</span>
+            <span style="font-size:12px;font-weight:900;color:var(--w);">
+              妻 →
+            </span>
+          </div>
+
+          <!-- 料理 -->
+          <div class="one-slider-row">
+            <div class="os-label">
+              <span>🍳 料理</span>
+              <span class="os-pcts"><span class="pct-h" id="cooking-h-v">30%</span><span class="os-sep">夫 / 妻</span><span class="pct-w" id="cooking-w-v">70%</span></span>
+            </div>
+            <div class="os-wrap">
+              <div class="os-bar">
+                <div class="os-bar-h" id="cooking-bar-h" style="width:30%"></div>
+                <div class="os-bar-w" id="cooking-bar-w" style="width:70%"></div>
+                <div class="os-midline"></div>
               </div>
-              <div class="dual-slider">
-                <div class="h-range"><input type="range" id="${cat}-h" min="0" max="100" value="${info.hd}" oninput="syncSlider('${cat}',this.value,'h')"></div>
-                <div class="w-range"><input type="range" id="${cat}-w" min="0" max="100" value="${info.wd}" oninput="syncSlider('${cat}',this.value,'w')"></div>
+              <input class="os-input" type="range" id="cooking-h" min="0" max="100" value="30" oninput="syncOne('cooking',this.value)">
+            </div>
+            <div class="os-stepper">
+              <button class="os-step-btn h-btn" onclick="stepOne('cooking',-1)">◀</button>
+              
+              <button class="os-step-btn w-btn" onclick="stepOne('cooking',+1)">▶</button>
+            </div>
+          </div>
+          <input type="hidden" id="cooking-w" value="70">
+
+          <!-- 掃除・洗濯 -->
+          <div class="one-slider-row">
+            <div class="os-label">
+              <span>🧹 掃除・洗濯</span>
+              <span class="os-pcts"><span class="pct-h" id="cleaning-h-v">20%</span><span class="os-sep">夫 / 妻</span><span class="pct-w" id="cleaning-w-v">80%</span></span>
+            </div>
+            <div class="os-wrap">
+              <div class="os-bar">
+                <div class="os-bar-h" id="cleaning-bar-h" style="width:20%"></div>
+                <div class="os-bar-w" id="cleaning-bar-w" style="width:80%"></div>
+                <div class="os-midline"></div>
               </div>
-            </div>`;
-          }).join('')}
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;">🧠 名もなき家事：書類管理・通院予約・行事把握・家電手配など</div>
+              <input class="os-input" type="range" id="cleaning-h" min="0" max="100" value="20" oninput="syncOne('cleaning',this.value)">
+            </div>
+            <div class="os-stepper">
+              <button class="os-step-btn h-btn" onclick="stepOne('cleaning',-1)">◀</button>
+              
+              <button class="os-step-btn w-btn" onclick="stepOne('cleaning',+1)">▶</button>
+            </div>
+          </div>
+          <input type="hidden" id="cleaning-w" value="80">
+
+          <!-- 買い物 -->
+          <div class="one-slider-row">
+            <div class="os-label">
+              <span>🛒 買い物</span>
+              <span class="os-pcts"><span class="pct-h" id="shopping-h-v">40%</span><span class="os-sep">夫 / 妻</span><span class="pct-w" id="shopping-w-v">60%</span></span>
+            </div>
+            <div class="os-wrap">
+              <div class="os-bar">
+                <div class="os-bar-h" id="shopping-bar-h" style="width:40%"></div>
+                <div class="os-bar-w" id="shopping-bar-w" style="width:60%"></div>
+                <div class="os-midline"></div>
+              </div>
+              <input class="os-input" type="range" id="shopping-h" min="0" max="100" value="40" oninput="syncOne('shopping',this.value)">
+            </div>
+            <div class="os-stepper">
+              <button class="os-step-btn h-btn" onclick="stepOne('shopping',-1)">◀</button>
+              
+              <button class="os-step-btn w-btn" onclick="stepOne('shopping',+1)">▶</button>
+            </div>
+          </div>
+          <input type="hidden" id="shopping-w" value="60">
+
+          <!-- 育児 -->
+          <div class="one-slider-row">
+            <div class="os-label">
+              <span>👶 育児</span>
+              <span class="os-pcts"><span class="pct-h" id="childcare-h-v">25%</span><span class="os-sep">夫 / 妻</span><span class="pct-w" id="childcare-w-v">75%</span></span>
+            </div>
+            <div class="os-wrap">
+              <div class="os-bar">
+                <div class="os-bar-h" id="childcare-bar-h" style="width:25%"></div>
+                <div class="os-bar-w" id="childcare-bar-w" style="width:75%"></div>
+                <div class="os-midline"></div>
+              </div>
+              <input class="os-input" type="range" id="childcare-h" min="0" max="100" value="25" oninput="syncOne('childcare',this.value)">
+            </div>
+            <div class="os-stepper">
+              <button class="os-step-btn h-btn" onclick="stepOne('childcare',-1)">◀</button>
+              
+              <button class="os-step-btn w-btn" onclick="stepOne('childcare',+1)">▶</button>
+            </div>
+          </div>
+          <input type="hidden" id="childcare-w" value="75">
+
+          <!-- その他 -->
+          <div class="one-slider-row" style="border-bottom:none;margin-bottom:0;">
+            <div class="os-label">
+              <span>📋 その他</span>
+              <span class="os-pcts"><span class="pct-h" id="mental-h-v">20%</span><span class="os-sep">夫 / 妻</span><span class="pct-w" id="mental-w-v">80%</span></span>
+            </div>
+            <div class="os-wrap">
+              <div class="os-bar">
+                <div class="os-bar-h" id="mental-bar-h" style="width:20%"></div>
+                <div class="os-bar-w" id="mental-bar-w" style="width:80%"></div>
+                <div class="os-midline"></div>
+              </div>
+              <input class="os-input" type="range" id="mental-h" min="0" max="100" value="20" oninput="syncOne('mental',this.value)">
+            </div>
+            <div class="os-stepper">
+              <button class="os-step-btn h-btn" onclick="stepOne('mental',-1)">◀</button>
+              <button class="os-step-btn w-btn" onclick="stepOne('mental',+1)">▶</button>
+            </div>
+          </div>
+          <input type="hidden" id="mental-w" value="80">
+
+          <div style="font-size:11px;color:var(--muted);margin-top:12px;line-height:1.7;">
+            📋 その他：日程調整・ゴミ出し・書類管理・保険・家電手配など
+          </div>
         </div>
 
         <div id="house-detail" style="display:none;">
-          <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">週あたりの回数・時間を入力。自動で割合に変換します。</div>
-          <div class="detail-grid" style="margin-bottom:10px;">
-            <span class="detail-header">カテゴリ</span>
-            <span class="detail-header" style="text-align:center;color:var(--h);">夫</span>
-            <span class="detail-header" style="text-align:center;color:var(--w);">妻</span>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.7;">
+            各タスクを<b style="color:var(--text)">主にどちらが担当しているか</b>を選んでください。<br>
+            選んだ結果がスコアに反映されます。
           </div>
-          ${[
-            {cat:'cooking',  icon:'🍳', name:'料理',      unit:'回/週'},
-            {cat:'cleaning', icon:'🧹', name:'掃除・洗濯', unit:'回/週'},
-            {cat:'shopping', icon:'🛒', name:'買い物',     unit:'回/週'},
-            {cat:'childcare',icon:'👶', name:'育児',       unit:'h/日'},
-            {cat:'mental',   icon:'🧠', name:'名もなき家事',unit:'件/週'},
-          ].map(r => `
-            <div class="detail-grid" style="margin-bottom:10px;">
-              <div>
-                <div class="detail-row-label">${r.icon} ${r.name}</div>
-                <div class="detail-unit">${r.unit}</div>
-              </div>
-              <input class="detail-input-h" type="number" id="d-${r.cat}-h" min="0" max="99" step="0.5" placeholder="0" oninput="syncDetailToSlider()">
-              <input class="detail-input-w" type="number" id="d-${r.cat}-w" min="0" max="99" step="0.5" placeholder="0" oninput="syncDetailToSlider()">
+
+          <!-- 凡例 -->
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:16px;text-align:center;">
+            <div style="font-size:10px;color:var(--h);font-weight:700;padding:4px;background:var(--h-light);border-radius:4px;">ほぼ夫</div>
+            <div style="font-size:10px;color:var(--h);font-weight:700;padding:4px;background:var(--bg);border-radius:4px;">夫が多め</div>
+            <div style="font-size:10px;color:var(--muted);font-weight:700;padding:4px;background:var(--bg);border-radius:4px;">半々</div>
+            <div style="font-size:10px;color:var(--w);font-weight:700;padding:4px;background:var(--bg);border-radius:4px;">妻が多め</div>
+            <div style="font-size:10px;color:var(--w);font-weight:700;padding:4px;background:var(--w-light);border-radius:4px;">ほぼ妻</div>
+          </div>
+
+          <!-- 料理カテゴリ -->
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);">🍳 料理</div>
+          <div class="task-row" id="tr-cooking-breakfast">
+            <div class="task-name">朝食を作る・準備する</div>
+            <div class="task-btns">
+              <button class="tbtn" onclick="setTask('cooking-breakfast',80,this)">ほぼ夫</button>
+              <button class="tbtn" onclick="setTask('cooking-breakfast',65,this)">夫が多め</button>
+              <button class="tbtn" onclick="setTask('cooking-breakfast',50,this)">半々</button>
+              <button class="tbtn" onclick="setTask('cooking-breakfast',35,this)">妻が多め</button>
+              <button class="tbtn" onclick="setTask('cooking-breakfast',20,this)">ほぼ妻</button>
             </div>
-          `).join('')}
-          <div id="detail-preview" style="display:none;margin-top:14px;padding:12px;background:var(--bg);border-radius:8px;">
-            <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:10px;">変換後の割合</div>
+          </div>
+          <div class="task-row" id="tr-cooking-main">
+            <div class="task-name">夕食・昼食を作る</div>
+            <div class="task-btns">
+              <button class="tbtn" onclick="setTask('cooking-main',80,this)">ほぼ夫</button>
+              <button class="tbtn" onclick="setTask('cooking-main',65,this)">夫が多め</button>
+              <button class="tbtn" onclick="setTask('cooking-main',50,this)">半々</button>
+              <button class="tbtn" onclick="setTask('cooking-main',35,this)">妻が多め</button>
+              <button class="tbtn" onclick="setTask('cooking-main',20,this)">ほぼ妻</button>
+            </div>
+          </div>
+          <div class="task-row" id="tr-cooking-dishes">
+            <div class="task-name">皿洗い・片付け</div>
+            <div class="task-btns">
+              <button class="tbtn" onclick="setTask('cooking-dishes',80,this)">ほぼ夫</button>
+              <button class="tbtn" onclick="setTask('cooking-dishes',65,this)">夫が多め</button>
+              <button class="tbtn" onclick="setTask('cooking-dishes',50,this)">半々</button>
+              <button class="tbtn" onclick="setTask('cooking-dishes',35,this)">妻が多め</button>
+              <button class="tbtn" onclick="setTask('cooking-dishes',20,this)">ほぼ妻</button>
+            </div>
+          </div>
+          <div class="task-row" id="tr-cooking-plan">
+            <div class="task-name">献立を考える・食材管理</div>
+            <div class="task-btns">
+              <button class="tbtn" onclick="setTask('cooking-plan',80,this)">ほぼ夫</button>
+              <button class="tbtn" onclick="setTask('cooking-plan',65,this)">夫が多め</button>
+              <button class="tbtn" onclick="setTask('cooking-plan',50,this)">半々</button>
+              <button class="tbtn" onclick="setTask('cooking-plan',35,this)">妻が多め</button>
+              <button class="tbtn" onclick="setTask('cooking-plan',20,this)">ほぼ妻</button>
+            </div>
+          </div>
+
+          <!-- 掃除・洗濯カテゴリ -->
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border);">🧹 掃除・洗濯</div>
+          <div class="task-row" id="tr-cleaning-room">
+            <div class="task-name">部屋の掃除・掃除機</div>
+            <div class="task-btns">
+              <button class="tbtn" onclick="setTask('cleaning-room',80,this)">ほぼ夫</button>
+              <button class="tbtn" onclick="setTask('cleaning-room',65,this)">夫が多め</button>
+              <button class="tbtn" onclick="setTask('cleaning-room',50,this)">半々</button>
+              <button class="tbtn" onclick="setTask('cleaning-room',35,this)">妻が多め</button>
+              <button class="tbtn" onclick="setTask('cleaning-room',20,this)">ほぼ妻</button>
+            </div>
+          </div>
+          <div class="task-row" id="tr-cleaning-wash">
+            <div class="task-name">洗濯機を回す・干す</div>
+            <div class="task-btns">
+              <button class="tbtn" onclick="setTask('cleaning-wash',80,this)">ほぼ夫</button>
+              <button class="tbtn" onclick="setTask('cleaning-wash',65,this)">夫が多め</button>
+              <button class="tbtn" onclick="setTask('cleaning-wash',50,this)">半々</button>
+              <button class="tbtn" onclick="setTask('cleaning-wash',35,this)">妻が多め</button>
+              <button class="tbtn" onclick="setTask('cleaning-wash',20,this)">ほぼ妻</button>
+            </div>
+          </div>
+          <div class="task-row" id="tr-cleaning-fold">
+            <div class="task-name">洗濯物をたたむ・しまう</div>
+            <div class="task-btns">
+              <button class="tbtn" onclick="setTask('cleaning-fold',80,this)">ほぼ夫</button>
+              <button class="tbtn" onclick="setTask('cleaning-fold',65,this)">夫が多め</button>
+              <button class="tbtn" onclick="setTask('cleaning-fold',50,this)">半々</button>
+              <button class="tbtn" onclick="setTask('cleaning-fold',35,this)">妻が多め</button>
+              <button class="tbtn" onclick="setTask('cleaning-fold',20,this)">ほぼ妻</button>
+            </div>
+          </div>
+
+          <!-- 買い物カテゴリ -->
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border);">🛒 買い物・雑務</div>
+          <div class="task-row" id="tr-shopping-food">
+            <div class="task-name">食品の買い出し</div>
+            <div class="task-btns">
+              <button class="tbtn" onclick="setTask('shopping-food',80,this)">ほぼ夫</button>
+              <button class="tbtn" onclick="setTask('shopping-food',65,this)">夫が多め</button>
+              <button class="tbtn" onclick="setTask('shopping-food',50,this)">半々</button>
+              <button class="tbtn" onclick="setTask('shopping-food',35,this)">妻が多め</button>
+              <button class="tbtn" onclick="setTask('shopping-food',20,this)">ほぼ妻</button>
+            </div>
+          </div>
+          <div class="task-row" id="tr-shopping-misc">
+            <div class="task-name">日用品・消耗品の管理・購入</div>
+            <div class="task-btns">
+              <button class="tbtn" onclick="setTask('shopping-misc',80,this)">ほぼ夫</button>
+              <button class="tbtn" onclick="setTask('shopping-misc',65,this)">夫が多め</button>
+              <button class="tbtn" onclick="setTask('shopping-misc',50,this)">半々</button>
+              <button class="tbtn" onclick="setTask('shopping-misc',35,this)">妻が多め</button>
+              <button class="tbtn" onclick="setTask('shopping-misc',20,this)">ほぼ妻</button>
+            </div>
+          </div>
+
+          <!-- 育児カテゴリ（子ども追加時のみ表示） -->
+          <div id="task-childcare-section" style="display:none;">
+            <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border);">👶 育児</div>
+            <div class="task-row" id="tr-childcare-daily">
+              <div class="task-name">送り迎え・朝の登園準備</div>
+              <div class="task-btns">
+                <button class="tbtn" onclick="setTask('childcare-daily',80,this)">ほぼ夫</button>
+                <button class="tbtn" onclick="setTask('childcare-daily',65,this)">夫が多め</button>
+                <button class="tbtn" onclick="setTask('childcare-daily',50,this)">半々</button>
+                <button class="tbtn" onclick="setTask('childcare-daily',35,this)">妻が多め</button>
+                <button class="tbtn" onclick="setTask('childcare-daily',20,this)">ほぼ妻</button>
+              </div>
+            </div>
+            <div class="task-row" id="tr-childcare-bath">
+              <div class="task-name">お風呂・寝かしつけ</div>
+              <div class="task-btns">
+                <button class="tbtn" onclick="setTask('childcare-bath',80,this)">ほぼ夫</button>
+                <button class="tbtn" onclick="setTask('childcare-bath',65,this)">夫が多め</button>
+                <button class="tbtn" onclick="setTask('childcare-bath',50,this)">半々</button>
+                <button class="tbtn" onclick="setTask('childcare-bath',35,this)">妻が多め</button>
+                <button class="tbtn" onclick="setTask('childcare-bath',20,this)">ほぼ妻</button>
+              </div>
+            </div>
+            <div class="task-row" id="tr-childcare-night">
+              <div class="task-name">夜泣き・急な体調不良の対応</div>
+              <div class="task-btns">
+                <button class="tbtn" onclick="setTask('childcare-night',80,this)">ほぼ夫</button>
+                <button class="tbtn" onclick="setTask('childcare-night',65,this)">夫が多め</button>
+                <button class="tbtn" onclick="setTask('childcare-night',50,this)">半々</button>
+                <button class="tbtn" onclick="setTask('childcare-night',35,this)">妻が多め</button>
+                <button class="tbtn" onclick="setTask('childcare-night',20,this)">ほぼ妻</button>
+              </div>
+            </div>
+            <div class="task-row" id="tr-childcare-appt">
+              <div class="task-name">通院予約・学校・習い事の管理</div>
+              <div class="task-btns">
+                <button class="tbtn" onclick="setTask('childcare-appt',80,this)">ほぼ夫</button>
+                <button class="tbtn" onclick="setTask('childcare-appt',65,this)">夫が多め</button>
+                <button class="tbtn" onclick="setTask('childcare-appt',50,this)">半々</button>
+                <button class="tbtn" onclick="setTask('childcare-appt',35,this)">妻が多め</button>
+                <button class="tbtn" onclick="setTask('childcare-appt',20,this)">ほぼ妻</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 段取り・根回し系 -->
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border);">📋 段取り・根回し</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.6;">やって当然、でも誰かが動かないと回らないもの</div>
+          <div class="task-row" id="tr-mgmt-schedule">
+            <div class="task-name">日程調整・リマインド・予約</div>
+            <div class="task-btns">
+              <button class="tbtn" onclick="setTask('mgmt-schedule',80,this)">ほぼ夫</button>
+              <button class="tbtn" onclick="setTask('mgmt-schedule',65,this)">夫が多め</button>
+              <button class="tbtn" onclick="setTask('mgmt-schedule',50,this)">半々</button>
+              <button class="tbtn" onclick="setTask('mgmt-schedule',35,this)">妻が多め</button>
+              <button class="tbtn" onclick="setTask('mgmt-schedule',20,this)">ほぼ妻</button>
+            </div>
+          </div>
+          <div class="task-row" id="tr-mgmt-trash">
+            <div class="task-name">ゴミ出し・分別ルールの管理</div>
+            <div class="task-btns">
+              <button class="tbtn" onclick="setTask('mgmt-trash',80,this)">ほぼ夫</button>
+              <button class="tbtn" onclick="setTask('mgmt-trash',65,this)">夫が多め</button>
+              <button class="tbtn" onclick="setTask('mgmt-trash',50,this)">半々</button>
+              <button class="tbtn" onclick="setTask('mgmt-trash',35,this)">妻が多め</button>
+              <button class="tbtn" onclick="setTask('mgmt-trash',20,this)">ほぼ妻</button>
+            </div>
+          </div>
+
+          <!-- お金・契約系 -->
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border);">💴 お金・契約管理</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.6;">放っておくとあとで困るやつ</div>
+          <div class="task-row" id="tr-mgmt-finance">
+            <div class="task-name">家計管理・支払い・確定申告</div>
+            <div class="task-btns">
+              <button class="tbtn" onclick="setTask('mgmt-finance',80,this)">ほぼ夫</button>
+              <button class="tbtn" onclick="setTask('mgmt-finance',65,this)">夫が多め</button>
+              <button class="tbtn" onclick="setTask('mgmt-finance',50,this)">半々</button>
+              <button class="tbtn" onclick="setTask('mgmt-finance',35,this)">妻が多め</button>
+              <button class="tbtn" onclick="setTask('mgmt-finance',20,this)">ほぼ妻</button>
+            </div>
+          </div>
+          <div class="task-row" id="tr-mgmt-contract">
+            <div class="task-name">保険・家電・定期購入の管理</div>
+            <div class="task-btns">
+              <button class="tbtn" onclick="setTask('mgmt-contract',80,this)">ほぼ夫</button>
+              <button class="tbtn" onclick="setTask('mgmt-contract',65,this)">夫が多め</button>
+              <button class="tbtn" onclick="setTask('mgmt-contract',50,this)">半々</button>
+              <button class="tbtn" onclick="setTask('mgmt-contract',35,this)">妻が多め</button>
+              <button class="tbtn" onclick="setTask('mgmt-contract',20,this)">ほぼ妻</button>
+            </div>
+          </div>
+
+          <!-- プレビュー -->
+          <div id="detail-preview" style="display:none;margin-top:16px;padding:12px;background:var(--bg);border-radius:8px;">
+            <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:10px;">入力結果のプレビュー（大カテゴリ別の平均）</div>
             <div id="detail-preview-bars"></div>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- 免責文 -->
+    <div style="
+      background:#fffdf0;
+      border:1.5px solid #e8d84a;
+      border-radius:10px;
+      padding:14px 16px;
+      margin-bottom:16px;
+      font-size:12px;
+      line-height:1.8;
+      color:#666650;
+    ">
+      <div style="font-weight:900;color:#88820a;margin-bottom:4px;font-size:13px;">📋 ご利用にあたって</div>
+      このスコアは統計的モデルによる参考値です。夫婦の状況はそれぞれ異なります。<br>
+      結果はあくまで<b>話し合いのきっかけ</b>としてご活用ください。診断結果により生じたいかなる問題についても、当サービスは責任を負いません。<br>
+      <span style="color:#88820a;">入力データは匿名加工のうえ、研究機関・企業等への提供・販売に使用する場合があります。</span>
     </div>
 
     <button class="start-btn" onclick="calculate()">スコアを計算する</button>
@@ -878,6 +1464,31 @@ input[type=range] {
         <div class="card-body" id="child-report-body"></div>
       </div>
 
+      <!-- ▼▼▼ 広告プレースホルダー（バズ後に有効化する） ▼▼▼ -->
+      <!--
+      <div id="ad-slot-result" style="margin-bottom:16px;min-height:100px;background:var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;">
+        AD SLOT — 結果表示後インタースティシャル
+      </div>
+      -->
+      <!-- ▲▲▲ 広告プレースホルダー ▲▲▲ -->
+
+      <!-- ① 即時投票 -->
+      <div class="card" id="self-vote-card">
+        <div class="card-header">この結果、公平だと思う？</div>
+        <div class="card-body" id="self-vote-body">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">あなた自身の感覚で投票してください。みんなの中立ラインの参考になります。</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="self-vote-btns">
+            <button class="cal-vote-btn" onclick="castSelfVote(0)">妥当だと思う</button>
+            <button class="cal-vote-btn" onclick="castSelfVote(1)">もっと夫が高いはず</button>
+            <button class="cal-vote-btn" onclick="castSelfVote(2)">もっと妻が高いはず</button>
+            <button class="cal-vote-btn" onclick="castSelfVote(3)">どちらとも言えない</button>
+          </div>
+          <div id="self-vote-done" style="display:none;text-align:center;padding:12px 0;font-size:13px;font-weight:700;color:var(--h);">
+            ✓ 投票ありがとうございます
+          </div>
+        </div>
+      </div>
+
       <!-- share -->
       <div class="share-card">
         <div class="share-card-title">うちのスコア</div>
@@ -901,6 +1512,13 @@ input[type=range] {
           <button class="share-btn copy" onclick="copyResult()">📋 コピー</button>
         </div>
       </div>
+
+      <!-- 結果下の免責（小） -->
+      <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:4px;line-height:1.9;padding:0 8px;">
+        このスコアは統計的モデルによる参考値です。夫婦の話し合いのきっかけとしてご活用ください。<br>
+        入力データは匿名加工のうえ、研究機関・企業等への提供・販売に使用する場合があります。個人情報は収集しません。<br>診断結果により生じたいかなる問題についても当サービスは責任を負いません。
+      </div>
+
     </div>
   </div>
 
@@ -918,13 +1536,61 @@ input[type=range] {
           <div class="cal-progress-fill" id="cal-progress-fill" style="width:0%"></div>
         </div>
       </div>
+      <!-- ソートタブ -->
+      <div style="display:flex;gap:0;margin-top:16px;border-bottom:2px solid var(--border);">
+        <button class="sort-tab active" id="sort-new" onclick="setSortMode('new',this)">新着</button>
+        <button class="sort-tab" id="sort-hot" onclick="setSortMode('hot',this)">人気</button>
+        <button class="sort-tab" id="sort-controversy" onclick="setSortMode('controversy',this)">物議</button>
+      </div>
     </div>
     <div id="survey-cases"></div>
   </div>
 
 </div>
 <script>
+// ── ONE SLIDER (かんたんモード A案) ──
+function syncOne(cat, val) {
+  val = Math.max(0, Math.min(100, parseInt(val)));
+  const wPct = 100 - val;
+  document.getElementById(`${cat}-bar-h`).style.width = val + '%';
+  document.getElementById(`${cat}-bar-w`).style.width = wPct + '%';
+  document.getElementById(`${cat}-h-v`).textContent = val + '%';
+  document.getElementById(`${cat}-w-v`).textContent = wPct + '%';
+  const inp = document.getElementById(`${cat}-h`);
+  if (inp) inp.value = val;
+  const wHidden = document.getElementById(`${cat}-w`);
+  if (wHidden) wHidden.value = wPct;
+}
+// 1%刻みステッパー（−はhPct減→妻寄り、+はhPct増→夫寄り）
+function stepOne(cat, delta) {
+  // delta > 0 → 夫を増やす、delta < 0 → 妻を増やす（夫を減らす）
+  const inp = document.getElementById(`${cat}-h`);
+  const cur = parseInt(inp?.value) || 0;
+  syncOne(cat, cur + delta);
+}
+
 // ── SLIDER ──
+// ── REGION ──
+let selectedRegion = null;
+function selectRegion(btn, region) {
+  document.querySelectorAll('.region-btn').forEach(b => b.classList.remove('selected'));
+  if (selectedRegion === region) {
+    // 同じボタンを再タップで選択解除
+    selectedRegion = null;
+  } else {
+    btn.classList.add('selected');
+    selectedRegion = region;
+  }
+}
+
+// ── COMMUTE TOGGLE ──
+function toggleCommute(who) {
+  const wt = document.getElementById(`${who}-worktype`).value;
+  const show = ['office', 'flex', 'part'].includes(wt);
+  const field = document.getElementById(`${who}-commute-field`);
+  if (field) field.style.display = show ? '' : 'none';
+}
+
 function syncSlider(cat, val, who) {
   val = parseInt(val);
   const other = who === 'h' ? 'w' : 'h';
@@ -944,31 +1610,74 @@ function setHouseMode(mode) {
   if (mode === 'detail') syncDetailToSlider();
 }
 
-function syncDetailToSlider() {
+// ── TASK CARDS (くわしくモード) ──
+// taskValues: タスクIDごとに夫の割合(0-100)を保持
+const taskValues = {};
+
+// タスクIDをカテゴリにマッピング
+const taskCatMap = {
+  'cooking-breakfast':'cooking',
+  'cooking-main':    'cooking',
+  'cooking-dishes':  'cooking',
+  'cooking-plan':    'cooking',
+  'cleaning-room':   'cleaning',
+  'cleaning-wash':   'cleaning',
+  'cleaning-fold':   'cleaning',
+  'shopping-food':   'shopping',
+  'shopping-misc':   'shopping',
+  'childcare-daily': 'childcare',
+  'childcare-bath':  'childcare',
+  'childcare-night': 'childcare',
+  'childcare-appt':  'childcare',
+  'mgmt-schedule':   'mental',
+  'mgmt-trash':      'mental',
+  'mgmt-finance':    'mental',
+  'mgmt-contract':   'mental',
+};
+
+function setTask(taskId, hPct, btn) {
+  taskValues[taskId] = hPct;
+
+  // ボタンのスタイル更新
+  const row = document.getElementById('tr-' + taskId);
+  row.querySelectorAll('.tbtn').forEach(b => b.classList.remove('selected-h','selected-half','selected-w'));
+  if (hPct > 50) btn.classList.add('selected-h');
+  else if (hPct === 50) btn.classList.add('selected-half');
+  else btn.classList.add('selected-w');
+
+  syncTaskToSlider();
+}
+
+function syncTaskToSlider() {
+  // カテゴリごとに入力済みタスクの平均を計算してスライダーに反映
   const cats = ['cooking','cleaning','shopping','childcare','mental'];
-  const icons = {cooking:'🍳',cleaning:'🧹',shopping:'🛒',childcare:'👶',mental:'🧠'};
-  const names = {cooking:'料理',cleaning:'掃除・洗濯',shopping:'買い物',childcare:'育児',mental:'名もなき家事'};
+  const catLabels = {cooking:'🍳 料理',cleaning:'🧹 掃除・洗濯',shopping:'🛒 買い物',childcare:'👶 育児',mental:'🧠 名もなき家事'};
   const preview = [];
+
   cats.forEach(cat => {
-    const hv = parseFloat(document.getElementById(`d-${cat}-h`)?.value) || 0;
-    const wv = parseFloat(document.getElementById(`d-${cat}-w`)?.value) || 0;
-    const tot = hv + wv;
-    if (tot > 0) {
-      const hPct = Math.round(hv / tot * 100);
-      document.getElementById(`${cat}-h`).value = hPct;
-      document.getElementById(`${cat}-w`).value = 100 - hPct;
-      document.getElementById(`${cat}-h-v`).textContent = hPct + '%';
-      document.getElementById(`${cat}-w-v`).textContent = (100 - hPct) + '%';
-      preview.push({cat, hPct});
-    }
+    const tasks = Object.entries(taskCatMap)
+      .filter(([,c]) => c === cat)
+      .map(([id]) => id)
+      .filter(id => taskValues[id] !== undefined);
+
+    if (tasks.length === 0) return;
+
+    const avg = Math.round(tasks.reduce((s, id) => s + taskValues[id], 0) / tasks.length);
+    document.getElementById(`${cat}-h`).value = avg;
+    document.getElementById(`${cat}-w`).value = 100 - avg;
+    document.getElementById(`${cat}-h-v`).textContent = avg + '%';
+    document.getElementById(`${cat}-w-v`).textContent = (100 - avg) + '%';
+    preview.push({ cat, hPct: avg, label: catLabels[cat] });
   });
+
+  // プレビュー
   const prevEl = document.getElementById('detail-preview');
   if (preview.length) {
     prevEl.style.display = 'block';
     document.getElementById('detail-preview-bars').innerHTML = preview.map(p => `
       <div class="preview-bar-row">
         <div class="preview-bar-meta">
-          <span style="color:var(--muted);font-size:12px;">${icons[p.cat]} ${names[p.cat]}</span>
+          <span style="color:var(--muted);font-size:12px;">${p.label}</span>
           <span><span style="color:var(--h);font-weight:700;">${p.hPct}%</span> / <span style="color:var(--w);font-weight:700;">${100-p.hPct}%</span></span>
         </div>
         <div class="preview-bar-track">
@@ -979,60 +1688,117 @@ function syncDetailToSlider() {
   } else { prevEl.style.display = 'none'; }
 }
 
+// 旧関数（かんたんモード切替時に残ってる場合に備えて空関数として残す）
+function syncDetailToSlider() { syncTaskToSlider(); }
+
 // ── CHILDREN ──
 let children = [];
 const ageGroups = ['0〜1歳','2〜3歳','4〜6歳','7〜12歳','13〜18歳'];
 const ageBurden = {'0〜1歳':1.0,'2〜3歳':0.8,'4〜6歳':0.5,'7〜12歳':0.3,'13〜18歳':0.15};
+
 function addChild() {
   if (children.length >= 8) return;
-  children.push('0〜1歳');
+  // 最後の子の年齢を引き継ぐ（追加するたびに0-1歳リセットを防ぐ）
+  const lastAge = children.length > 0 ? children[children.length - 1] : '0〜1歳';
+  children.push(lastAge);
   renderChildren();
 }
-function removeChild() {
-  if (!children.length) return;
-  children.pop();
+
+// ①：DOM組み込みのremoveChildと名前が衝突するのでdeleteChildに変更
+function deleteChild() {
+  if (children.length === 0) return;
+  children.splice(children.length - 1, 1);
+  if (children.length === 0) {
+    ['childcare-daily','childcare-bath','childcare-night','childcare-appt'].forEach(id => {
+      delete taskValues[id];
+      const row = document.getElementById('tr-' + id);
+      if (row) row.querySelectorAll('.tbtn').forEach(b =>
+        b.classList.remove('selected-h','selected-half','selected-w'));
+    });
+    syncTaskToSlider();
+  }
   renderChildren();
 }
-function renderChildren() {
-  document.getElementById('children-list').innerHTML = children.map((ag, i) => `
-    <div class="child-tag">
-      <span>👶</span>
-      <select onchange="children[${i}]=this.value;updateChildBurden()">
-        ${ageGroups.map(a => `<option${a===ag?' selected':''}>${a}</option>`).join('')}
-      </select>
-    </div>`).join('');
+
+// ②：selectのonchangeで配列を更新後に再描画する形にし、年齢を保持
+function setChildAge(i, val) {
+  children[i] = val;
   updateChildBurden();
 }
+
+function renderChildren() {
+  const list = document.getElementById('children-list');
+  if (!list) return;
+  // innerHTML一括置換ではなく、必要な要素だけ更新
+  list.innerHTML = children.map((ag, i) =>
+    `<div class="child-tag">
+      <span>👶</span>
+      <select onchange="setChildAge(${i}, this.value)">
+        ${ageGroups.map(a => `<option${a===ag?' selected':''}>${a}</option>`).join('')}
+      </select>
+    </div>`
+  ).join('');
+  updateChildBurden();
+  const sec = document.getElementById('task-childcare-section');
+  if (sec) sec.style.display = children.length > 0 ? 'block' : 'none';
+}
+
 function updateChildBurden() {
   const el = document.getElementById('child-burden-info');
+  if (!el) return;
   if (!children.length) { el.textContent = ''; return; }
-  const tot = children.reduce((s, ag) => s + ageBurden[ag], 0);
-  const lbl = tot > 1.5 ? '🔥 かなりハード' : tot > 0.8 ? '😤 そこそこ大変' : '😊 少し余裕あり';
-  el.textContent = `育児負荷：${lbl}`;
+  const tot = children.reduce((s, ag) => s + (ageBurden[ag] || 0), 0);
+  const lbl = tot > 2.0 ? '🔥🔥 激務レベル' : tot > 1.5 ? '🔥 かなりハード' : tot > 0.8 ? '😤 そこそこ大変' : '😊 少し余裕あり';
+  el.textContent = `育児負荷：${lbl}（係数 ${tot.toFixed(1)}）`;
 }
 
 // ── CALCULATE ──
-const wtFactor = {office:1.0,remote:0.9,flex:0.95,part:0.6,none:0.0};
-const wtCommute = {office:10,remote:0,flex:5,part:5,none:0};
+// 産休・育休：実際に育児をしている時間として労働に近い扱い（係数0.5）、通勤ゼロ
+const wtFactor = {office:1.0, remote:0.9, flex:0.95, part:0.6, leave:0.5, none:0.0};
+const wtCommute = {office:10,  remote:0,   flex:5,    part:5,   leave:0,   none:0};
 function gn(id) { return parseFloat(document.getElementById(id).value) || 0; }
 function gs(cat) { return parseInt(document.getElementById(cat+'-h').value); }
 
 function calculate() {
-  const hInc = gn('h-income'), wInc = gn('w-income');
-  const hWork = gn('h-work'), wWork = gn('w-work');
-  const hSleep = gn('h-sleep'), wSleep = gn('w-sleep');
+  // ── バリデーション ──
+  const hInc = Math.max(0, Math.min(9999, gn('h-income')));
+  const wInc = Math.max(0, Math.min(9999, gn('w-income')));
+  const hWork = Math.max(0, Math.min(168, gn('h-work')));
+  const wWork = Math.max(0, Math.min(168, gn('w-work')));
+  const hSleep = Math.max(0, Math.min(24, gn('h-sleep')));
+  const wSleep = Math.max(0, Math.min(24, gn('w-sleep')));
+  if (hInc === 0 && wInc === 0) {
+    alert('年収をどちらか入力してください。');
+    return;
+  }
   const hWT = document.getElementById('h-worktype').value;
   const wWT = document.getElementById('w-worktype').value;
+
+  // 通勤時間：入力値（分/片道）→ 週5日往復換算で時間に変換
+  // フレックス・パートは週3日換算、リモート・産休・専業はゼロ
+  const commuteInput = { h: gn('h-commute') || 30, w: gn('w-commute') || 30 };
+  const commuteDays  = { office:5, flex:3, part:3, remote:0, leave:0, none:0 };
+  function commuteHours(who, wt) {
+    return commuteInput[who] * 2 * (commuteDays[wt] || 0) / 60;
+  }
+  const hCommute = commuteHours('h', hWT);
+  const wCommute = commuteHours('w', wWT);
   const cooking = gs('cooking'), cleaning = gs('cleaning');
   const shopping = gs('shopping'), childcare = gs('childcare'), mental = gs('mental');
 
-  const childLoad = children.reduce((s, ag) => s + ageBurden[ag], 0);
-  const childW = Math.min(childLoad * 0.12, 0.25);
+  // ── 育児係数（総務省社会生活基本調査2021準拠）──
+  // 年齢別負荷係数：0-1歳1.0→13-18歳0.15は実態に即した設計
+  // childLoadが増えるほど育児ウェイトが増加（上限0.35）
+  // childcarePctはスライダー値をそのまま使う（補正なし）
+  const childLoad = children.reduce((s, ag) => s + (ageBurden[ag] || 0), 0);
+  const childW = Math.min(childLoad * 0.08, 0.35);
+  const childcarePctH = childcare;
+  const childcarePctW = 100 - childcare;
 
   const totalInc = hInc + wInc || 1;
   const hIncP = hInc / totalInc * 100, wIncP = 100 - hIncP;
-  const hWe = hWork * wtFactor[hWT] + wtCommute[hWT];
-  const wWe = wWork * wtFactor[wWT] + wtCommute[wWT];
+  const hWe = hWork * wtFactor[hWT] + hCommute;
+  const wWe = wWork * wtFactor[wWT] + wCommute;
   const totalWe = hWe + wWe || 1;
   const hWP = hWe / totalWe * 100, wWP = 100 - hWP;
   const hSS = Math.max(0, 9 - hSleep), wSS = Math.max(0, 9 - wSleep);
@@ -1045,8 +1811,8 @@ function calculate() {
   const wSum = Object.values(w).reduce((a,b)=>a+b,0);
   Object.keys(w).forEach(k => w[k] /= wSum);
 
-  const hRaw = hIncP*w.income + hWP*w.work + hSP*w.sleep + hHouse*w.house + childcare*w.child;
-  const wRaw = wIncP*w.income + wWP*w.work + wSP*w.sleep + wHouse*w.house + (100-childcare)*w.child;
+  const hRaw = hIncP*w.income + hWP*w.work + hSP*w.sleep + hHouse*w.house + childcarePctH*w.child;
+  const wRaw = wIncP*w.income + wWP*w.work + wSP*w.sleep + wHouse*w.house + childcarePctW*w.child;
   const norm = hRaw + wRaw;
   const hScore = Math.round(hRaw / norm * 100);
   const wScore = 100 - hScore;
@@ -1089,7 +1855,7 @@ function calculate() {
     {name:'🍳 料理',         h:cooking,          w:100-cooking},
     {name:'🧹 掃除・洗濯',  h:cleaning,         w:100-cleaning},
     {name:'🛒 買い物',       h:shopping,         w:100-shopping},
-    {name:'👶 育児',         h:childcare,        w:100-childcare},
+    {name:'👶 育児',         h:Math.round(childcarePctH), w:Math.round(childcarePctW)},
     {name:'🧠 名もなき家事',h:mental,           w:100-mental},
   ];
   document.getElementById('breakdown-rows').innerHTML = cats.map(c => `
@@ -1126,32 +1892,71 @@ function calculate() {
   document.getElementById('sh-verdict').textContent = verdict;
   window._result = {hScore, wScore, verdict};
   setTimeout(() => document.getElementById('results').scrollIntoView({behavior:'smooth'}), 300);
+
+  // vote_id生成（8文字ランダム）してシェアURLに埋め込む
+  const voteId = Math.random().toString(36).slice(2, 10);
+  window._result = {hScore, wScore, verdict, voteId};
+
+  // Supabaseに匿名で保存
+  saveResult(hScore, wScore, verdict, {
+    hInc, wInc, hWork, wWork, hWT, wWT, hSleep, wSleep,
+    childCount: children.length,
+    cooking, cleaning, shopping, childcare, mental,
+    region: selectedRegion,
+    voteId
+  });
+  // くわしくモードならタスク詳細も保存
+  if (houseMode === 'detail' && Object.keys(taskValues).length > 0) {
+    saveTaskDetail({...taskValues});
+  }
 }
 
 // ── SHARE ──
+// 媒体別に文字数・改行の最適化をしつつ、核心（数字・判定・投票誘導）は共通
+function buildShareText(hScore, wScore, verdict, platform) {
+  const voteId = window._result?.voteId;
+  const baseUrl = 'https://uchiscore.jp';
+  const url = voteId ? `${baseUrl}/?vote=${voteId}` : baseUrl;
+  if (platform === 'x') {
+    return `夫 ${hScore}pt / 妻 ${wScore}pt でした。\nこの数字って妥当だと思う？投票してみて👇\n${url}\n#うちのスコア #うちスコ`;
+  }
+  if (platform === 'line') {
+    return `【うちのスコア】\n夫 ${hScore}pt / 妻 ${wScore}pt\n${verdict}\n\nこの数字って妥当だと思う？投票してみて\n${url}`;
+  }
+  if (platform === 'threads') {
+    return `夫 ${hScore}pt / 妻 ${wScore}pt でした。\nこの数字って妥当だと思う？投票してみて👇\n#うちのスコア\n${url}`;
+  }
+  return `【うちのスコア】夫 ${hScore}pt / 妻 ${wScore}pt — ${verdict}\nこの数字って妥当だと思う？投票してみて👇\n${url} #うちのスコア`;
+}
+
 function shareX() {
   if (!window._result) return;
-  const {hScore,wScore,verdict} = window._result;
-  const t = `【うちのスコア】\n夫 ${hScore}pt vs 妻 ${wScore}pt\n${verdict}\n#うちのスコア`;
-  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(t)}`,'_blank');
+  const {hScore, wScore, verdict} = window._result;
+  const t = buildShareText(hScore, wScore, verdict, 'x');
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(t)}`, '_blank');
 }
 function shareLine() {
   if (!window._result) return;
-  const {hScore,wScore,verdict} = window._result;
-  const t = `【うちのスコア】夫${hScore}pt / 妻${wScore}pt\n${verdict}\n#うちのスコア`;
-  window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent('https://uchiscore.jp')}&text=${encodeURIComponent(t)}`,'_blank');
+  const {hScore, wScore, verdict} = window._result;
+  const t = buildShareText(hScore, wScore, verdict, 'line');
+  window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent('https://uchiscore.jp')}&text=${encodeURIComponent(t)}`, '_blank');
 }
 function shareThreads() {
   if (!window._result) return;
-  const {hScore,wScore,verdict} = window._result;
-  const t = `【うちのスコア】夫${hScore}pt vs 妻${wScore}pt ${verdict} #うちのスコア`;
-  window.open(`https://www.threads.net/intent/post?text=${encodeURIComponent(t)}`,'_blank');
+  const {hScore, wScore, verdict} = window._result;
+  const t = buildShareText(hScore, wScore, verdict, 'threads');
+  window.open(`https://www.threads.net/intent/post?text=${encodeURIComponent(t)}`, '_blank');
 }
 function copyResult() {
   if (!window._result) return;
-  const {hScore,wScore,verdict} = window._result;
-  navigator.clipboard.writeText(`【うちのスコア】夫${hScore}pt / 妻${wScore}pt — ${verdict} #うちのスコア`);
-  alert('コピーしました！');
+  const {hScore, wScore, verdict} = window._result;
+  const t = buildShareText(hScore, wScore, verdict, 'copy');
+  navigator.clipboard.writeText(t).then(() => {
+    const btn = document.querySelector('.share-btn.copy');
+    const orig = btn.textContent;
+    btn.textContent = '✓ コピーしました';
+    setTimeout(() => btn.textContent = orig, 2000);
+  });
 }
 
 // ── TABS ──
@@ -1160,7 +1965,7 @@ function switchTab(tab, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
   el.classList.add('active');
-  if (tab === 'survey') renderSurvey();
+  if (tab === 'survey') { renderSurvey(); }
 }
 
 // ── CALIBRATION ──
@@ -1207,8 +2012,29 @@ const calCases = [
    hScore:48,wScore:52,verdict:'ほぼ公平',votes:[356,134,201,89],totalVotes:780},
 ];
 
+// 物議醸し率：1位得票率が低いほど高い（max=100, 4択均等=0%）
+function controversyScore(votes) {
+  const total = votes.reduce((a,b) => a+b, 0);
+  if (!total) return 0;
+  const topPct = Math.max(...votes) / total;
+  // 均等(0.25)→100、全員一致(1.0)→0
+  return Math.round(Math.max(0, (1 - topPct) / 0.75) * 100);
+}
+
+let calSortMode = 'new';
+function setSortMode(mode, btn) {
+  calSortMode = mode;
+  document.querySelectorAll('.sort-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSurvey();
+}
+
 function getSorted() {
-  return [...calCases].sort((a,b) => b.totalVotes - a.totalVotes);
+  return [...calCases].sort((a, b) => {
+    if (calSortMode === 'hot') return b.totalVotes - a.totalVotes;
+    if (calSortMode === 'controversy') return controversyScore(b.votes) - controversyScore(a.votes);
+    return a.id - b.id; // new: デフォルト順
+  });
 }
 
 function renderSurvey() {
@@ -1260,6 +2086,8 @@ function renderCalCase(c) {
   const hasVoted = voted !== undefined;
   const total = c.votes.reduce((a,b)=>a+b,0);
   const hot = c.totalVotes >= 1000;
+  const controversy = controversyScore(c.votes);
+  const isControversial = controversy >= 70;
   const hwItems = [
     ['🍳 料理', c.housework.cooking],
     ['🧹 掃除・洗濯', c.housework.cleaning],
@@ -1274,6 +2102,7 @@ function renderCalCase(c) {
       <span class="cal-case-tag">${c.tag}</span>
       <div class="cal-case-meta">
         ${hot ? '<span class="hot-badge">🔥 HOT</span>' : ''}
+        ${isControversial ? `<span class="controversy-badge">⚡ 物議 ${controversy}%</span>` : ''}
         <span class="cal-votes-count">${c.totalVotes.toLocaleString()}票</span>
       </div>
     </div>
@@ -1371,6 +2200,10 @@ function castVote(caseId, optIdx) {
   calCases[caseId].totalVotes++;
   renderSurvey();
   setTimeout(() => animateBars(caseId), 120);
+  // Supabaseに保存（失敗時はトースト）
+  saveCalVote(caseId, optIdx).then(ok => {
+    if (!ok) showToast('通信エラーが発生しました。投票は記録されていない可能性があります', 'error');
+  });
 }
 
 function animateBars(id) {
@@ -1379,8 +2212,298 @@ function animateBars(id) {
   });
 }
 
+// ── SUPABASE 設定 ──
+// ↓ Supabaseプロジェクト作成後にここを書き換える
+const SUPABASE_URL = 'https://zmayupfqywulhoysxkgl.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InptYXl1cGZxeXd1bGhveXN4a2dsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NzIyMTMsImV4cCI6MjA4NzI0ODIxM30.Ry63Xnu9lwIORAozOO_aTuzpyiPalNMh6Llrlm_vyDI';
+
+// Supabaseへの汎用POST関数
+// トースト表示
+let _toastTimer;
+function showToast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (type ? ' ' + type : '') + ' show';
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { el.classList.remove('show'); }, 3000);
+}
+
+async function sbInsert(table, data) {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(data)
+    });
+    return res.ok;
+  } catch(e) {
+    console.warn('Supabase save failed:', e);
+    return false;
+  }
+}
+
+// 診断結果を保存（匿名）
+async function saveResult(hScore, wScore, verdict, inputs) {
+  if (SUPABASE_URL.includes('YOUR_PROJECT')) return;
+  await sbInsert('diagnosis_results', {
+    h_score: hScore,
+    w_score: wScore,
+    verdict: verdict,
+    h_income: inputs.hInc,
+    w_income: inputs.wInc,
+    h_work_hours: inputs.hWork,
+    w_work_hours: inputs.wWork,
+    h_worktype: inputs.hWT,
+    w_worktype: inputs.wWT,
+    h_sleep: inputs.hSleep,
+    w_sleep: inputs.wSleep,
+    child_count: inputs.childCount,
+    cooking_h_pct: inputs.cooking,
+    cleaning_h_pct: inputs.cleaning,
+    shopping_h_pct: inputs.shopping,
+    childcare_h_pct: inputs.childcare,
+    mental_h_pct: inputs.mental,
+    region: inputs.region || null,
+    vote_id: inputs.voteId || null,
+    input_mode: houseMode,
+    created_at: new Date().toISOString()
+  });
+}
+
+// キャリブレーション投票を保存
+async function saveCalVote(caseId, optIdx) {
+  if (SUPABASE_URL.includes('YOUR_PROJECT')) return;
+  await sbInsert('calibration_votes', {
+    case_id: caseId,
+    vote_option: optIdx,
+    vote_label: voteLabels[optIdx],
+    created_at: new Date().toISOString()
+  });
+}
+
+// くわしくモードのタスク選択を保存
+async function saveTaskDetail(taskSnapshot) {
+  if (SUPABASE_URL.includes('YOUR_PROJECT')) return;
+  await sbInsert('task_detail_logs', {
+    task_values: taskSnapshot, // JSON
+    child_count: children.length,
+    created_at: new Date().toISOString()
+  });
+}
+
+// ── SELF VOTE（結果画面からの即時投票）──
+function castSelfVote(optIdx) {
+  if (!window._result) return;
+  const { hScore, wScore, voteId } = window._result;
+
+  document.getElementById('self-vote-btns').style.display = 'none';
+  document.getElementById('self-vote-done').style.display = 'block';
+
+  if (!voteId) return;
+  sbInsert('calibration_votes', {
+    case_id: `self_${voteId}`,
+    vote_option: optIdx,
+    vote_label: voteLabels[optIdx],
+    is_self: true,
+    created_at: new Date().toISOString()
+  }).then(ok => {
+    if (!ok) {
+      document.getElementById('self-vote-done').textContent = '⚠ 通信エラー。もう一度お試しください';
+    }
+  });
+}
+
+
 // ── INIT ──
 renderChildren();
+toggleCommute('h');
+toggleCommute('w');
+
+// ── VOTE URL 検出（?vote=xxxでシェアされたURLを開いたとき）──
+(async function() {
+  const voteId = new URLSearchParams(location.search).get('vote');
+  if (!voteId || SUPABASE_URL.includes('YOUR_PROJECT')) return;
+
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/diagnosis_results?vote_id=eq.${voteId}&select=h_score,w_score,verdict&limit=1`,
+      { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
+    );
+    const data = await res.json();
+    if (!data.length) return;
+
+    const { h_score, w_score, verdict } = data[0];
+    const modal = document.createElement('div');
+    modal.id = 'vote-modal-wrap';
+    modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px;`;
+    modal.innerHTML = `
+      <div style="background:white;border-radius:16px;padding:24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+        <div style="font-size:13px;color:#999;margin-bottom:12px;text-align:center;">シェアされたスコア</div>
+        <div style="display:flex;gap:12px;margin-bottom:16px;">
+          <div style="flex:1;text-align:center;background:#fdf0ee;border-radius:10px;padding:14px;">
+            <div style="font-size:11px;color:#e85d4a;font-weight:700;">夫</div>
+            <div style="font-size:40px;font-weight:900;color:#e85d4a;">${h_score}</div>
+            <div style="font-size:11px;color:#e85d4a;">pt</div>
+          </div>
+          <div style="flex:1;text-align:center;background:#ebf5f5;border-radius:10px;padding:14px;">
+            <div style="font-size:11px;color:#2a7d7b;font-weight:700;">妻</div>
+            <div style="font-size:40px;font-weight:900;color:#2a7d7b;">${w_score}</div>
+            <div style="font-size:11px;color:#2a7d7b;">pt</div>
+          </div>
+        </div>
+        <div style="font-size:14px;font-weight:700;text-align:center;margin-bottom:4px;">${verdict || ''}</div>
+
+        <!-- STEP1: 投票 -->
+        <div id="vote-step1">
+          <div style="font-size:13px;color:#666;text-align:center;margin:12px 0;">このスコア、妥当だと思う？</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;" id="vote-modal-btns">
+            ${voteLabels.map((lbl,i) => `
+              <button onclick="selectVoteOption('${voteId}',${i},this)"
+                style="padding:10px 6px;font-size:12px;font-weight:700;border:1.5px solid #ddd;border-radius:8px;background:white;cursor:pointer;font-family:inherit;">${lbl}</button>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- STEP2: 属性（投票後に表示） -->
+        <div id="vote-step2" style="display:none;">
+          <div style="font-size:12px;color:#999;text-align:center;margin-bottom:12px;">あなたについて教えてください（任意・分析に使います）</div>
+          <div style="margin-bottom:10px;">
+            <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:6px;">性別</div>
+            <div style="display:flex;gap:6px;">
+              <button class="attr-btn" onclick="selectAttr('gender','男性',this)" style="flex:1;padding:8px;font-size:12px;font-weight:700;border:1.5px solid #ddd;border-radius:8px;background:white;cursor:pointer;font-family:inherit;">男性</button>
+              <button class="attr-btn" onclick="selectAttr('gender','女性',this)" style="flex:1;padding:8px;font-size:12px;font-weight:700;border:1.5px solid #ddd;border-radius:8px;background:white;cursor:pointer;font-family:inherit;">女性</button>
+              <button class="attr-btn" onclick="selectAttr('gender','その他',this)" style="flex:1;padding:8px;font-size:12px;font-weight:700;border:1.5px solid #ddd;border-radius:8px;background:white;cursor:pointer;font-family:inherit;">その他</button>
+            </div>
+          </div>
+          <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:6px;">年代</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">
+              ${['20代','30代','40代','50代以上'].map(a =>
+                `<button class="attr-btn" onclick="selectAttr('age','${a}',this)" style="padding:8px 4px;font-size:12px;font-weight:700;border:1.5px solid #ddd;border-radius:8px;background:white;cursor:pointer;font-family:inherit;">${a}</button>`
+              ).join('')}
+            </div>
+          </div>
+          <button onclick="submitVoteWithAttr('${voteId}')"
+            style="width:100%;padding:11px;background:#1a1a1a;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
+            投票する
+          </button>
+        </div>
+
+        <div id="vote-modal-done" style="display:none;text-align:center;padding:8px;font-size:13px;font-weight:700;color:#e85d4a;">
+          ✓ 投票ありがとうございます！
+        </div>
+        <button onclick="document.getElementById('vote-modal-wrap').remove()"
+          style="width:100%;padding:10px;border:none;background:#f7f6f3;border-radius:8px;font-size:12px;color:#999;cursor:pointer;font-family:inherit;margin-top:8px;">
+          閉じて診断する
+        </button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // 重複チェック
+    if (localStorage.getItem(`voted_${voteId}`)) {
+      document.getElementById('vote-step1').style.display = 'none';
+      document.getElementById('vote-modal-done').textContent = '✓ すでに投票済みです';
+      document.getElementById('vote-modal-done').style.display = 'block';
+    }
+  } catch(e) {}
+})();
+
+let _pendingVoteOpt = null;
+let _pendingVoteGender = null;
+let _pendingVoteAge = null;
+
+function selectVoteOption(voteId, optIdx, btn) {
+  const key = `voted_${voteId}`;
+  if (localStorage.getItem(key)) return;
+  // ボタンをハイライト
+  document.querySelectorAll('#vote-modal-btns button').forEach(b => b.style.background = 'white');
+  btn.style.background = '#1a1a1a';
+  btn.style.color = 'white';
+  _pendingVoteOpt = optIdx;
+  // STEP2へ
+  setTimeout(() => {
+    document.getElementById('vote-step1').style.display = 'none';
+    document.getElementById('vote-step2').style.display = 'block';
+  }, 200);
+}
+
+function selectAttr(type, val, btn) {
+  // 同じグループの選択をリセット
+  btn.closest('div').querySelectorAll('.attr-btn').forEach(b => {
+    b.style.background = 'white'; b.style.color = '#1a1a1a';
+    b.style.borderColor = '#ddd';
+  });
+  btn.style.background = '#1a1a1a';
+  btn.style.color = 'white';
+  btn.style.borderColor = '#1a1a1a';
+  if (type === 'gender') _pendingVoteGender = val;
+  if (type === 'age') _pendingVoteAge = val;
+}
+
+async function submitVoteWithAttr(voteId) {
+  if (_pendingVoteOpt === null) return;
+  localStorage.setItem(`voted_${voteId}`, '1');
+  document.getElementById('vote-step2').style.display = 'none';
+  document.getElementById('vote-modal-done').style.display = 'block';
+
+  const ok = await sbInsert('calibration_votes', {
+    case_id: `vote_${voteId}`,
+    vote_option: _pendingVoteOpt,
+    vote_label: voteLabels[_pendingVoteOpt],
+    is_self: false,
+    voter_gender: _pendingVoteGender || null,
+    voter_age: _pendingVoteAge || null,
+    created_at: new Date().toISOString()
+  });
+
+  if (!ok) {
+    document.getElementById('vote-modal-done').innerHTML =
+      '⚠ 通信エラーが発生しました。<br>投票が記録されていない可能性があります。';
+    localStorage.removeItem(`voted_${voteId}`); // 再投票できるよう解除
+  }
+
+  _pendingVoteOpt = null; _pendingVoteGender = null; _pendingVoteAge = null;
+}
+
+// ⑤ データ活用周知バナー（初回のみ表示）
+(function() {
+  if (localStorage.getItem('uchi_notice_v1')) return;
+  const banner = document.createElement('div');
+  banner.style.cssText = `
+    position:fixed;bottom:0;left:0;right:0;
+    background:#1a1a1a;color:white;
+    padding:14px 16px;font-size:12px;line-height:1.9;
+    z-index:9999;display:flex;gap:12px;align-items:flex-start;
+  `;
+  banner.innerHTML = `
+    <div style="flex:1;">
+      📊 <b>データの利用について</b><br>
+      入力された情報は<b>個人を特定できない形に匿名加工</b>したうえで、アルゴリズムの改善・統計分析・研究目的に活用します。
+      また、匿名加工済みデータを<b>研究機関・企業等へ提供・販売する場合があります</b>。
+      個人情報（氏名・連絡先等）は一切収集しません。
+    </div>
+    <button onclick="this.parentElement.remove();localStorage.setItem('uchi_notice_v1','1')"
+      style="background:white;color:#1a1a1a;border:none;border-radius:6px;padding:6px 14px;font-weight:700;cursor:pointer;flex-shrink:0;font-size:12px;margin-top:2px;">
+      閉じる
+    </button>
+  `;
+  document.body.appendChild(banner);
+})();
+
+// ⑦ PWA Service Worker 登録
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
 </script>
-</body>
-</html>
+
+<footer style="text-align:center;padding:32px 16px 48px;font-size:12px;color:#aaa;border-top:1px solid #e8e5df;margin-top:8px;">
+  © 2026 うちのスコア　／　
+  <a href="/privacy" style="color:#aaa;text-decoration:underline;">プライバシーポリシー</a>
+  　／　
+  <a href="/cdn-cgi/l/email-protection#f481979c9d87979b8691da9b92929d979d9598b49399959d98da979b99" style="color:#aaa;text-decoration:underline;"
