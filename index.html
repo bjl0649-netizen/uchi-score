@@ -2010,7 +2010,7 @@ async function loadCalCases() {
   try {
     // vote_idがあるケースを取得（最大50件）
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/diagnosis_results?vote_id=not.is.null&select=vote_id,h_score,w_score,verdict,h_worktype,w_worktype,child_count,cooking_h_pct,cleaning_h_pct,shopping_h_pct,childcare_h_pct,mental_h_pct,created_at&order=created_at.desc&limit=50`,
+      `${SUPABASE_URL}/rest/v1/diagnosis_results?vote_id=not.is.null&select=vote_id,h_score,w_score,verdict,h_income,w_income,h_work_hours,w_work_hours,h_sleep,w_sleep,h_worktype,w_worktype,child_count,cooking_h_pct,cleaning_h_pct,shopping_h_pct,childcare_h_pct,mental_h_pct,created_at&order=created_at.desc&limit=50`,
       { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
     );
     const rows = await res.json();
@@ -2040,6 +2040,12 @@ async function loadCalCases() {
       hScore: r.h_score,
       wScore: r.w_score,
       verdict: r.verdict,
+      h_income: r.h_income,
+      w_income: r.w_income,
+      h_work_hours: r.h_work_hours,
+      w_work_hours: r.w_work_hours,
+      h_sleep: r.h_sleep,
+      w_sleep: r.w_sleep,
       h_worktype: r.h_worktype,
       w_worktype: r.w_worktype,
       child_count: r.child_count || 0,
@@ -2183,8 +2189,25 @@ function renderCalCase(c) {
       <div class="cal-verdict">${c.verdict || ''}</div>
 
       ${hwItems.length ? `
-      <button class="cal-detail-btn" id="dbtn-${c.id}" onclick="toggleCalDetail('${c.id}')">分担データを見る ▼</button>
+      <button class="cal-detail-btn" id="dbtn-${c.id}" onclick="toggleCalDetail('${c.id}')">詳細データを見る ▼</button>
       <div class="cal-detail-panel" id="cdp-${c.id}">
+        <div class="cal-data-grid">
+          <div class="cal-data-box h">
+            <div class="cal-data-who">夫</div>
+            <div class="cal-data-item">年収 <b>${c.h_income != null ? Math.round(c.h_income) + '万円' : '未入力'}</b></div>
+            <div class="cal-data-item">労働 <b>${c.h_work_hours != null ? '週' + c.h_work_hours + 'h' : '未入力'}</b></div>
+            <div class="cal-data-item">睡眠 <b>${c.h_sleep != null ? c.h_sleep + 'h' : '未入力'}</b></div>
+            <div class="cal-data-item">形態 <b>${worktypeLabel(c.h_worktype)}</b></div>
+          </div>
+          <div class="cal-data-box w">
+            <div class="cal-data-who">妻</div>
+            <div class="cal-data-item">年収 <b>${c.w_income != null ? Math.round(c.w_income) + '万円' : '未入力'}</b></div>
+            <div class="cal-data-item">労働 <b>${c.w_work_hours != null ? '週' + c.w_work_hours + 'h' : '未入力'}</b></div>
+            <div class="cal-data-item">睡眠 <b>${c.w_sleep != null ? c.w_sleep + 'h' : '未入力'}</b></div>
+            <div class="cal-data-item">形態 <b>${worktypeLabel(c.w_worktype)}</b></div>
+          </div>
+        </div>
+        <div class="cal-kids-row">👶 こども：<b>${c.child_count > 0 ? c.child_count + '人' : 'なし'}</b></div>
         <div class="cal-house-bars">
           <div class="cal-house-label">家事・育児の分担（夫 / 妻）</div>
           ${hwItems.map(([label, hPct]) => `
