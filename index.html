@@ -1965,59 +1965,22 @@ function switchTab(tab, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
   el.classList.add('active');
-  if (tab === 'survey') { renderSurvey(); }
+  if (tab === 'survey') { loadCalCases(); }
 }
 
 // ── CALIBRATION ──
-const VISIBLE = 5;
-const calVoted = {};
 const voteLabels = ['妥当だと思う','もっと夫が高いはず','もっと妻が高いはず','どちらとも言えない'];
 const voteColors = ['var(--green)','var(--h)','var(--w)','var(--muted)'];
 
-const calCases = [
-  {id:0,tag:'Case 01',title:'年収1,200万の夫・週70h出社。妻は専業で家事育児9割担当。',
-   h:{income:'1,200万',work:'週70h',sleep:'5.5h',type:'出社'},
-   w:{income:'0万',work:'家事専業',sleep:'6.5h',type:'専業'},kids:'なし',
-   housework:{cooking:10,cleaning:10,shopping:20,childcare:10,named:5},
-   hScore:62,wScore:38,verdict:'夫の負担が大きい',votes:[312,189,445,98],totalVotes:1044},
-  {id:1,tag:'Case 02',title:'共働きフルタイム同士、年収差100万。家事は妻7割・育児8割。',
-   h:{income:'500万',work:'週45h',sleep:'8h',type:'出社'},
-   w:{income:'400万',work:'週40h',sleep:'6h',type:'出社'},kids:'小学生2人',
-   housework:{cooking:25,cleaning:20,shopping:35,childcare:20,named:15},
-   hScore:38,wScore:62,verdict:'妻の負担が大きい',votes:[521,98,187,134],totalVotes:940},
-  {id:2,tag:'Case 03',title:'産休中の妻、0歳＋3歳の育児を9割担当。夫はリモート700万。',
-   h:{income:'700万',work:'週50h',sleep:'8h',type:'リモート'},
-   w:{income:'産休中',work:'育児専任',sleep:'4h(断続)',type:'休業'},kids:'0歳・3歳',
-   housework:{cooking:15,cleaning:10,shopping:25,childcare:10,named:10},
-   hScore:34,wScore:66,verdict:'妻への負荷が限界に近い',votes:[234,78,678,156],totalVotes:1146},
-  {id:3,tag:'Case 04',title:'夫が単身赴任・月2回帰宅。妻はフルタイム＋ワンオペ育児。',
-   h:{income:'650万',work:'週55h',sleep:'7h',type:'出社(単身)'},
-   w:{income:'350万',work:'週40h',sleep:'5.5h',type:'出社'},kids:'4歳・7歳',
-   housework:{cooking:5,cleaning:5,shopping:10,childcare:5,named:10},
-   hScore:41,wScore:59,verdict:'妻がやや多め',votes:[188,312,234,89],totalVotes:823},
-  {id:4,tag:'Case 05',title:'夫が転職して無職3ヶ月。妻が主な収入源、家事も妻6割。',
-   h:{income:'0万(求職中)',work:'家事・就活',sleep:'8h',type:'無職'},
-   w:{income:'480万',work:'週45h',sleep:'6.5h',type:'出社'},kids:'なし',
-   housework:{cooking:40,cleaning:45,shopping:40,childcare:0,named:30},
-   hScore:46,wScore:54,verdict:'ほぼ公平',votes:[145,267,198,312],totalVotes:922},
-  {id:5,tag:'Case 06',title:'共働き子なし。夫リモート・妻出社。家事は夫6割担当。',
-   h:{income:'550万',work:'週42h',sleep:'7.5h',type:'リモート'},
-   w:{income:'520万',work:'週40h',sleep:'7h',type:'出社'},kids:'なし',
-   housework:{cooking:60,cleaning:65,shopping:55,childcare:0,named:40},
-   hScore:55,wScore:45,verdict:'夫がやや多め',votes:[423,89,178,134],totalVotes:824},
-  {id:6,tag:'Case 07',title:'育休中の夫（半年）。育児は妻7割、家事は夫6割の分担。',
-   h:{income:'0万(育休)',work:'育休・家事',sleep:'6h',type:'育休'},
-   w:{income:'0万(育休)',work:'育休・育児',sleep:'5h(断続)',type:'育休'},kids:'0歳',
-   housework:{cooking:60,cleaning:65,shopping:55,childcare:30,named:45},
-   hScore:48,wScore:52,verdict:'ほぼ公平',votes:[356,134,201,89],totalVotes:780},
-];
+// Supabaseから取得したケースを格納
+let calCases = [];
+const calVoted = {}; // { vote_id: optIdx }
 
-// 物議醸し率：1位得票率が低いほど高い（max=100, 4択均等=0%）
+// 物議醸し率
 function controversyScore(votes) {
   const total = votes.reduce((a,b) => a+b, 0);
   if (!total) return 0;
   const topPct = Math.max(...votes) / total;
-  // 均等(0.25)→100、全員一致(1.0)→0
   return Math.round(Math.max(0, (1 - topPct) / 0.75) * 100);
 }
 
@@ -2033,17 +1996,92 @@ function getSorted() {
   return [...calCases].sort((a, b) => {
     if (calSortMode === 'hot') return b.totalVotes - a.totalVotes;
     if (calSortMode === 'controversy') return controversyScore(b.votes) - controversyScore(a.votes);
-    return a.id - b.id; // new: デフォルト順
+    return new Date(b.created_at) - new Date(a.created_at); // 新着順
   });
 }
 
+// Supabaseからケース一覧を取得
+async function loadCalCases() {
+  if (SUPABASE_URL.includes('YOUR_PROJECT')) return;
+
+  const container = document.getElementById('survey-cases');
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:13px;">読み込み中...</div>';
+
+  try {
+    // vote_idがあるケースを取得（最大50件）
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/diagnosis_results?vote_id=not.is.null&select=vote_id,h_score,w_score,verdict,h_worktype,w_worktype,child_count,cooking_h_pct,cleaning_h_pct,shopping_h_pct,childcare_h_pct,mental_h_pct,created_at&order=created_at.desc&limit=50`,
+      { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
+    );
+    const rows = await res.json();
+    if (!rows.length) { renderSurvey(); return; }
+
+    // 投票集計を取得
+    const voteIds = rows.map(r => r.vote_id);
+    const caseIds = voteIds.map(id => `vote_${id}`);
+    const vRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/calibration_votes?case_id=in.(${caseIds.map(id=>`"${id}"`).join(',')})&select=case_id,vote_option`,
+      { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
+    );
+    const voteRows = await vRes.json();
+
+    // vote_idごとに集計
+    const votemap = {};
+    voteRows.forEach(v => {
+      const vid = v.case_id.replace('vote_', '');
+      if (!votemap[vid]) votemap[vid] = [0,0,0,0];
+      votemap[vid][v.vote_option]++;
+    });
+
+    // calCasesに変換
+    calCases = rows.map(r => ({
+      id: r.vote_id,
+      vote_id: r.vote_id,
+      hScore: r.h_score,
+      wScore: r.w_score,
+      verdict: r.verdict,
+      h_worktype: r.h_worktype,
+      w_worktype: r.w_worktype,
+      child_count: r.child_count || 0,
+      cooking: r.cooking_h_pct,
+      cleaning: r.cleaning_h_pct,
+      shopping: r.shopping_h_pct,
+      childcare: r.childcare_h_pct,
+      mental: r.mental_h_pct,
+      created_at: r.created_at,
+      votes: votemap[r.vote_id] || [0,0,0,0],
+      totalVotes: (votemap[r.vote_id] || [0,0,0,0]).reduce((a,b)=>a+b,0),
+    }));
+
+  } catch(e) {
+    console.warn('loadCalCases failed:', e);
+  }
+
+  renderSurvey();
+}
+
 function renderSurvey() {
+  // プログレスバー
   const vc = Object.keys(calVoted).length;
-  const pct = Math.round(vc / calCases.length * 100);
-  document.getElementById('cal-progress-fill').style.width = pct + '%';
+  const total = calCases.length || 1;
+  document.getElementById('cal-progress-fill').style.width = Math.round(vc/total*100) + '%';
   document.getElementById('cal-progress-txt').textContent = `${vc} / ${calCases.length} ケース`;
 
+  const container = document.getElementById('survey-cases');
+
+  // データ0件
+  if (!calCases.length) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:48px 24px;color:#aaa;">
+        <div style="font-size:32px;margin-bottom:12px;">📭</div>
+        <div style="font-size:14px;font-weight:700;color:#666;margin-bottom:8px;">まだデータがありません</div>
+        <div style="font-size:13px;line-height:1.8;">診断してSNSでシェアすると<br>ここに投票ケースが追加されます</div>
+      </div>`;
+    return;
+  }
+
   const sorted = getSorted();
+  const VISIBLE = 5;
   const vis = sorted.slice(0, VISIBLE);
   const hid = sorted.slice(VISIBLE);
 
@@ -2057,9 +2095,8 @@ function renderSurvey() {
       ${hid.map(c => renderCalCase(c)).join('')}
     </div>`;
   }
-  document.getElementById('survey-cases').innerHTML = html;
+  container.innerHTML = html;
 
-  // アニメ
   calCases.forEach(c => {
     if (calVoted[c.id] !== undefined) setTimeout(() => animateBars(c.id), 120);
   });
@@ -2072,43 +2109,64 @@ function toggleMore() {
   el.style.display = isOpen ? 'none' : 'block';
   el.dataset.open = isOpen ? '0' : '1';
   btn.textContent = isOpen
-    ? `▼ さらに ${calCases.length - VISIBLE} ケースを見る`
+    ? `▼ さらに ${calCases.length - 5} ケースを見る`
     : '▲ 折りたたむ';
   if (!isOpen) {
-    getSorted().slice(VISIBLE).forEach(c => {
+    getSorted().slice(5).forEach(c => {
       if (calVoted[c.id] !== undefined) setTimeout(() => animateBars(c.id), 120);
     });
   }
+}
+
+// 就労形態ラベルを簡潔に
+function worktypeLabel(wt) {
+  if (!wt) return '不明';
+  if (wt.includes('出社')) return '出社';
+  if (wt.includes('リモート')) return 'リモート';
+  if (wt.includes('産休') || wt.includes('育休')) return '育休中';
+  if (wt.includes('専業')) return '専業';
+  if (wt.includes('無職') || wt.includes('求職')) return '求職中';
+  return wt;
 }
 
 function renderCalCase(c) {
   const voted = calVoted[c.id];
   const hasVoted = voted !== undefined;
   const total = c.votes.reduce((a,b)=>a+b,0);
-  const hot = c.totalVotes >= 1000;
+  const hot = c.totalVotes >= 50;
   const controversy = controversyScore(c.votes);
-  const isControversial = controversy >= 70;
+  const isControversial = controversy >= 70 && total >= 5;
+
+  // 属性タグ生成
+  const tags = [];
+  if (c.h_worktype && c.w_worktype) {
+    const both = worktypeLabel(c.h_worktype) + '×' + worktypeLabel(c.w_worktype);
+    tags.push(both);
+  }
+  if (c.child_count > 0) tags.push(`子ども${c.child_count}人`);
+  else tags.push('子どもなし');
+
   const hwItems = [
-    ['🍳 料理', c.housework.cooking],
-    ['🧹 掃除・洗濯', c.housework.cleaning],
-    ['🛒 買い物', c.housework.shopping],
-    ['👶 育児', c.housework.childcare],
-    ['🧠 名もなき家事', c.housework.named],
-  ];
+    ['🍳 料理', c.cooking],
+    ['🧹 掃除・洗濯', c.cleaning],
+    ['🛒 買い物', c.shopping],
+    ['👶 育児', c.childcare],
+    ['🧠 名もなき家事', c.mental],
+  ].filter(([,v]) => v !== null && v !== undefined);
 
   return `
   <div class="cal-case" id="calcase-${c.id}">
     <div class="cal-case-header">
-      <span class="cal-case-tag">${c.tag}</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${tags.map(t => `<span class="cal-case-tag">${t}</span>`).join('')}
+      </div>
       <div class="cal-case-meta">
         ${hot ? '<span class="hot-badge">🔥 HOT</span>' : ''}
         ${isControversial ? `<span class="controversy-badge">⚡ 物議 ${controversy}%</span>` : ''}
-        <span class="cal-votes-count">${c.totalVotes.toLocaleString()}票</span>
+        <span class="cal-votes-count">${c.totalVotes}票</span>
       </div>
     </div>
     <div class="cal-case-body">
-      <div class="cal-case-title">${c.title}</div>
-
       <div class="cal-scores">
         <div class="cal-score-box h">
           <div class="cal-score-who">夫</div>
@@ -2122,27 +2180,11 @@ function renderCalCase(c) {
           <div class="cal-score-pt">pt</div>
         </div>
       </div>
-      <div class="cal-verdict">${c.verdict}</div>
+      <div class="cal-verdict">${c.verdict || ''}</div>
 
-      <button class="cal-detail-btn" id="dbtn-${c.id}" onclick="toggleCalDetail(${c.id})">詳細データを見る ▼</button>
+      ${hwItems.length ? `
+      <button class="cal-detail-btn" id="dbtn-${c.id}" onclick="toggleCalDetail('${c.id}')">分担データを見る ▼</button>
       <div class="cal-detail-panel" id="cdp-${c.id}">
-        <div class="cal-data-grid">
-          <div class="cal-data-box h">
-            <div class="cal-data-who">夫</div>
-            <div class="cal-data-item">年収 <b>${c.h.income}</b></div>
-            <div class="cal-data-item">労働 <b>${c.h.work}</b></div>
-            <div class="cal-data-item">睡眠 <b>${c.h.sleep}</b></div>
-            <div class="cal-data-item">形態 <b>${c.h.type}</b></div>
-          </div>
-          <div class="cal-data-box w">
-            <div class="cal-data-who">妻</div>
-            <div class="cal-data-item">年収 <b>${c.w.income}</b></div>
-            <div class="cal-data-item">労働 <b>${c.w.work}</b></div>
-            <div class="cal-data-item">睡眠 <b>${c.w.sleep}</b></div>
-            <div class="cal-data-item">形態 <b>${c.w.type}</b></div>
-          </div>
-        </div>
-        <div class="cal-kids-row">👶 こども：<b>${c.kids}</b></div>
         <div class="cal-house-bars">
           <div class="cal-house-label">家事・育児の分担（夫 / 妻）</div>
           ${hwItems.map(([label, hPct]) => `
@@ -2157,13 +2199,13 @@ function renderCalCase(c) {
               </div>
             </div>`).join('')}
         </div>
-      </div>
+      </div>` : ''}
 
       <div class="cal-vote-q">このスコアは妥当だと思いますか？</div>
       ${hasVoted ? `
         <div id="cal-res-${c.id}">
           ${voteLabels.map((lbl,i) => {
-            const pct = Math.round(c.votes[i]/total*100);
+            const pct = total ? Math.round(c.votes[i]/total*100) : 0;
             const isMe = voted === i;
             return `<div class="cal-result-row">
               <div class="cal-result-meta">
@@ -2175,11 +2217,11 @@ function renderCalCase(c) {
               </div>
             </div>`;
           }).join('')}
-          <div class="cal-result-total">${total.toLocaleString()}票</div>
+          <div class="cal-result-total">${total}票</div>
         </div>` : `
         <div class="cal-vote-opts">
           ${voteLabels.map((lbl,i) => `
-            <button class="cal-vote-btn" onclick="castVote(${c.id},${i})">${lbl}</button>`).join('')}
+            <button class="cal-vote-btn" onclick="castVote('${c.id}',${i})">${lbl}</button>`).join('')}
         </div>`}
     </div>
   </div>`;
@@ -2190,18 +2232,19 @@ function toggleCalDetail(id) {
   const btn = document.getElementById(`dbtn-${id}`);
   const open = el.style.display !== 'none';
   el.style.display = open ? 'none' : 'block';
-  btn.textContent = open ? '詳細データを見る ▼' : '詳細を閉じる ▲';
+  btn.textContent = open ? '分担データを見る ▼' : '閉じる ▲';
 }
 
 function castVote(caseId, optIdx) {
   if (calVoted[caseId] !== undefined) return;
   calVoted[caseId] = optIdx;
-  calCases[caseId].votes[optIdx]++;
-  calCases[caseId].totalVotes++;
+  // ローカルの票数を即時更新
+  const c = calCases.find(x => x.id === caseId);
+  if (c) { c.votes[optIdx]++; c.totalVotes++; }
   renderSurvey();
   setTimeout(() => animateBars(caseId), 120);
-  // Supabaseに保存（失敗時はトースト）
-  saveCalVote(caseId, optIdx).then(ok => {
+  // Supabaseに保存
+  saveCalVote(`vote_${caseId}`, optIdx).then(ok => {
     if (!ok) showToast('通信エラーが発生しました。投票は記録されていない可能性があります', 'error');
   });
 }
@@ -2277,8 +2320,8 @@ async function saveResult(hScore, wScore, verdict, inputs) {
 
 // キャリブレーション投票を保存
 async function saveCalVote(caseId, optIdx) {
-  if (SUPABASE_URL.includes('YOUR_PROJECT')) return;
-  await sbInsert('calibration_votes', {
+  if (SUPABASE_URL.includes('YOUR_PROJECT')) return true;
+  return await sbInsert('calibration_votes', {
     case_id: caseId,
     vote_option: optIdx,
     vote_label: voteLabels[optIdx],
