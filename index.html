@@ -2397,32 +2397,77 @@ toggleCommute('w');
 
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/diagnosis_results?vote_id=eq.${voteId}&select=h_score,w_score,verdict&limit=1`,
+      `${SUPABASE_URL}/rest/v1/diagnosis_results?vote_id=eq.${voteId}&select=h_score,w_score,verdict,h_income,w_income,h_work_hours,w_work_hours,h_sleep,w_sleep,h_worktype,w_worktype,child_count,cooking_h_pct,cleaning_h_pct,shopping_h_pct,childcare_h_pct,mental_h_pct&limit=1`,
       { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
     );
     const data = await res.json();
     if (!data.length) return;
 
-    const { h_score, w_score, verdict } = data[0];
+    const d = data[0];
+
+    // 家事分担バー生成
+    const hwItems = [
+      ['🍳 料理', d.cooking_h_pct],
+      ['🧹 掃除・洗濯', d.cleaning_h_pct],
+      ['🛒 買い物', d.shopping_h_pct],
+      ['👶 育児', d.childcare_h_pct],
+      ['🧠 名もなき家事', d.mental_h_pct],
+    ].filter(([,v]) => v !== null && v !== undefined);
+
+    const hwHtml = hwItems.map(([label, hPct]) => `
+      <div style="margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#666;margin-bottom:2px;">
+          <span>${label}</span>
+          <span>夫${hPct}% / 妻${100-hPct}%</span>
+        </div>
+        <div style="height:6px;border-radius:3px;overflow:hidden;display:flex;">
+          <div style="width:${hPct}%;background:#e85d4a;"></div>
+          <div style="width:${100-hPct}%;background:#2a7d7b;"></div>
+        </div>
+      </div>`).join('');
+
     const modal = document.createElement('div');
     modal.id = 'vote-modal-wrap';
-    modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px;`;
+    modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;`;
     modal.innerHTML = `
-      <div style="background:white;border-radius:16px;padding:24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+      <div style="background:white;border-radius:16px;padding:24px;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);margin:auto;">
         <div style="font-size:13px;color:#999;margin-bottom:12px;text-align:center;">シェアされたスコア</div>
-        <div style="display:flex;gap:12px;margin-bottom:16px;">
+
+        <div style="display:flex;gap:12px;margin-bottom:12px;">
           <div style="flex:1;text-align:center;background:#fdf0ee;border-radius:10px;padding:14px;">
             <div style="font-size:11px;color:#e85d4a;font-weight:700;">夫</div>
-            <div style="font-size:40px;font-weight:900;color:#e85d4a;">${h_score}</div>
+            <div style="font-size:40px;font-weight:900;color:#e85d4a;">${d.h_score}</div>
             <div style="font-size:11px;color:#e85d4a;">pt</div>
           </div>
           <div style="flex:1;text-align:center;background:#ebf5f5;border-radius:10px;padding:14px;">
             <div style="font-size:11px;color:#2a7d7b;font-weight:700;">妻</div>
-            <div style="font-size:40px;font-weight:900;color:#2a7d7b;">${w_score}</div>
+            <div style="font-size:40px;font-weight:900;color:#2a7d7b;">${d.w_score}</div>
             <div style="font-size:11px;color:#2a7d7b;">pt</div>
           </div>
         </div>
-        <div style="font-size:14px;font-weight:700;text-align:center;margin-bottom:4px;">${verdict || ''}</div>
+        <div style="font-size:14px;font-weight:700;text-align:center;margin-bottom:12px;">${d.verdict || ''}</div>
+
+        <!-- 詳細情報 -->
+        <div style="background:#f7f6f3;border-radius:10px;padding:12px;margin-bottom:12px;font-size:12px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+            <div>
+              <div style="font-weight:700;color:#e85d4a;margin-bottom:4px;">夫</div>
+              <div style="color:#444;">年収 <b>${d.h_income != null ? Math.round(d.h_income) + '万' : '－'}</b></div>
+              <div style="color:#444;">労働 <b>${d.h_work_hours != null ? '週' + d.h_work_hours + 'h' : '－'}</b></div>
+              <div style="color:#444;">睡眠 <b>${d.h_sleep != null ? d.h_sleep + 'h' : '－'}</b></div>
+              <div style="color:#444;">形態 <b>${worktypeLabel(d.h_worktype)}</b></div>
+            </div>
+            <div>
+              <div style="font-weight:700;color:#2a7d7b;margin-bottom:4px;">妻</div>
+              <div style="color:#444;">年収 <b>${d.w_income != null ? Math.round(d.w_income) + '万' : '－'}</b></div>
+              <div style="color:#444;">労働 <b>${d.w_work_hours != null ? '週' + d.w_work_hours + 'h' : '－'}</b></div>
+              <div style="color:#444;">睡眠 <b>${d.w_sleep != null ? d.w_sleep + 'h' : '－'}</b></div>
+              <div style="color:#444;">形態 <b>${worktypeLabel(d.w_worktype)}</b></div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:#666;margin-bottom:8px;">👶 こども：<b>${d.child_count > 0 ? d.child_count + '人' : 'なし'}</b></div>
+          ${hwHtml}
+        </div>
 
         <!-- STEP1: 投票 -->
         <div id="vote-step1">
